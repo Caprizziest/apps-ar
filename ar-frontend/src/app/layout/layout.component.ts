@@ -19,12 +19,15 @@ import { NavigationService } from '../core/services/navigation.service';
     PaymentFormModalComponent
   ],
   template: `
-    <div class="v3-shell">
+    <div class="v3-shell" [class.dark-mode]="navService.isDarkMode()">
+      <!-- Mobile Backdrop -->
+      <div class="v3-sidebar-backdrop" *ngIf="navService.sidebarMobileOpen()" (click)="navService.toggleSidebarMobile()"></div>
+
       <!-- Sidebar Navigation -->
       <app-sidebar></app-sidebar>
 
       <!-- Main Shell Area -->
-      <div class="v3-main">
+      <div class="v3-main" [class.sidebar-collapsed]="navService.sidebarCollapsed()">
         <!-- Top Navigation Bar -->
         <app-topbar></app-topbar>
 

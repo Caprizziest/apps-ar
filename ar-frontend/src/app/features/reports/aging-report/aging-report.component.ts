@@ -12,14 +12,14 @@ import { Invoice } from '../../../core/models/ar.models';
   imports: [CommonModule, FormsModule, RupiahPipe],
   template: `
     <div class="d-flex flex-column gap-3">
-      <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+      <div class="dashboard-header-row">
         <div>
-          <h3 class="fw-bold mb-1" style="font-size: 1.15rem;">Laporan Umur Piutang (Aging)</h3>
-          <p class="text-muted small mb-0">Distribusi umur piutang pelanggan per interval 30 hari.</p>
+          <h1 class="page-title">Laporan Umur Piutang (Aging Report)</h1>
+          <p class="page-subtitle">Distribusi umur piutang pelanggan per interval 30 hari untuk evaluasi risiko kredit.</p>
         </div>
         <div class="d-flex align-items-center gap-2">
           <label class="small text-muted fw-semibold text-nowrap">As of Date:</label>
-          <input type="date" class="form-control form-control-sm" style="width: 140px;" [ngModel]="agingAsOfDate()"
+          <input type="date" class="form-control form-control-sm v3-mono" style="width: 145px;" [ngModel]="agingAsOfDate()"
             (ngModelChange)="agingAsOfDate.set($event)">
         </div>
       </div>

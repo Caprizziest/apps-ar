@@ -11,10 +11,14 @@ import { MutasiTransactionDetail, MutasiCustomerSummary } from '../../../core/mo
   imports: [CommonModule, FormsModule, RupiahPipe],
   template: `
     <div class="d-flex flex-column gap-3">
+      <div class="dashboard-header-row">
+        <div>
+          <h1 class="page-title">Laporan Mutasi Piutang Usaha</h1>
+          <p class="page-subtitle">Rekapitulasi pergerakan saldo awal, penambahan tagihan, pelunasan, dan saldo akhir per debitur.</p>
+        </div>
+      </div>
+
       <div class="v3-card p-3">
-        <h2 class="h5 fw-bold text-dark mb-3 text-uppercase" style="letter-spacing: 0.03em;">
-          Laporan Mutasi Piutang
-        </h2>
 
         <!-- Date Filters & Global Search bar -->
         <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-3">

@@ -11,6 +11,13 @@ import { KartuPiutangRow } from '../../../core/models/ar.models';
   imports: [CommonModule, FormsModule, RupiahPipe],
   template: `
     <div class="d-flex flex-column gap-3">
+      <div class="dashboard-header-row">
+        <div>
+          <h1 class="page-title">Kartu Piutang Seimbang (Buku Pembantu)</h1>
+          <p class="page-subtitle">Rincian mutasi debet, kredit, dan saldo berjalan per pelanggan secara kronologis.</p>
+        </div>
+      </div>
+
       <div class="v3-card p-3">
         <!-- Filter Ribbon -->
         <div class="row g-3 mb-3">

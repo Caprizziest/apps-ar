@@ -74,6 +74,7 @@ export class DashboardComponent {
         sublabel: 'Lancar / On-Schedule',
         amount: dist.current,
         pct: dist.currentPct,
+        color: '#10b981',
         barClass: 'v3-bar-current',
         dotClass: 'dot-green',
         badgeClass: 'bg-success-subtle text-success border border-success-subtle'
@@ -84,6 +85,7 @@ export class DashboardComponent {
         sublabel: 'Keterlambatan Awal',
         amount: dist.days1_30,
         pct: dist.days1_30Pct,
+        color: '#3b82f6',
         barClass: 'v3-bar-130',
         dotClass: 'dot-blue',
         badgeClass: 'bg-primary-subtle text-primary border border-primary-subtle'
@@ -94,6 +96,7 @@ export class DashboardComponent {
         sublabel: 'Perhatian Khusus',
         amount: dist.days31_60,
         pct: dist.days31_60Pct,
+        color: '#f59e0b',
         barClass: 'v3-bar-3160',
         dotClass: 'dot-yellow',
         badgeClass: 'bg-warning-subtle text-warning-emphasis border border-warning-subtle'
@@ -104,6 +107,7 @@ export class DashboardComponent {
         sublabel: 'Waspada Tinggi',
         amount: dist.days61_90,
         pct: dist.days61_90Pct,
+        color: '#f97316',
         barClass: 'v3-bar-6190',
         dotClass: 'dot-orange',
         badgeClass: 'bg-warning-subtle text-dark border border-warning-subtle'
@@ -111,9 +115,10 @@ export class DashboardComponent {
       {
         id: '90plus',
         label: '> 90 Hari',
-        sublabel: 'Kritis / Bad Debt Risk',
+        sublabel: 'Risiko Macet / Kritis',
         amount: dist.days90Plus,
         pct: dist.days90PlusPct,
+        color: '#ef4444',
         barClass: 'v3-bar-90plus',
         dotClass: 'dot-red',
         badgeClass: 'bg-danger-subtle text-danger border border-danger-subtle'
@@ -121,12 +126,30 @@ export class DashboardComponent {
     ];
 
     const maxAmount = Math.max(...buckets.map(b => b.amount), 1);
-    return {
-      buckets: buckets.map(b => ({
+    const circumference = 2 * Math.PI * 68; // r = 68
+    let accumulatedPct = 0;
+
+    const enrichedBuckets = buckets.map(b => {
+      const dashLen = (b.pct / 100) * circumference;
+      const dashOffset = -((accumulatedPct / 100) * circumference);
+      accumulatedPct += b.pct;
+      return {
         ...b,
-        heightPct: Math.max(12, Math.round((b.amount / maxAmount) * 100))
-      })),
-      totalOutstanding: dist.total
+        heightPct: Math.max(12, Math.round((b.amount / maxAmount) * 100)),
+        dashArray: `${dashLen} ${circumference}`,
+        dashOffset
+      };
+    });
+
+    const overdueTotal = dist.days1_30 + dist.days31_60 + dist.days61_90 + dist.days90Plus;
+
+    return {
+      buckets: enrichedBuckets,
+      totalOutstanding: dist.total,
+      currentAmount: dist.current,
+      currentPct: dist.currentPct,
+      overdueAmount: overdueTotal,
+      overduePct: Math.max(0, 100 - dist.currentPct)
     };
   });
 

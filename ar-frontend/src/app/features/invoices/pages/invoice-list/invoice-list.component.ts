@@ -14,43 +14,141 @@ import { ConfirmDialogComponent, DeleteModalState } from '../../../../shared/com
   imports: [CommonModule, FormsModule, RupiahPipe, CancelInvoiceModalComponent, ConfirmDialogComponent],
   template: `
     <div class="d-flex flex-column gap-3">
-      <!-- Controls Toolbar: Status Tabs per Table 4.4.2 & Action Button -->
-      <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
-        <div class="v3-tabs-bar">
-          <button type="button" class="v3-tab-btn" [class.active]="invoiceCategoryFilter() === 'ALL'"
-            (click)="invoiceCategoryFilter.set('ALL')">
-            Semua <span class="v3-tab-count">{{ invoiceCategoryCounts().all }}</span>
-          </button>
-          <button type="button" class="v3-tab-btn" [class.active]="invoiceCategoryFilter() === 'Draft'"
-            (click)="invoiceCategoryFilter.set('Draft')">
-            Draft <span class="v3-tab-count">{{ invoiceCategoryCounts().draft }}</span>
-          </button>
-          <button type="button" class="v3-tab-btn" [class.active]="invoiceCategoryFilter() === 'Issued'"
-            (click)="invoiceCategoryFilter.set('Issued')">
-            Issued <span class="v3-tab-count">{{ invoiceCategoryCounts().issued }}</span>
-          </button>
-          <button type="button" class="v3-tab-btn" [class.active]="invoiceCategoryFilter() === 'Partially Paid'"
-            (click)="invoiceCategoryFilter.set('Partially Paid')">
-            Partially Paid <span class="v3-tab-count">{{ invoiceCategoryCounts().partiallyPaid }}</span>
-          </button>
-          <button type="button" class="v3-tab-btn text-danger" [class.active]="invoiceCategoryFilter() === 'Overdue'"
-            (click)="invoiceCategoryFilter.set('Overdue')">
-            Overdue <span class="v3-tab-count">{{ invoiceCategoryCounts().overdue }}</span>
-          </button>
-          <button type="button" class="v3-tab-btn text-success" [class.active]="invoiceCategoryFilter() === 'Paid'"
-            (click)="invoiceCategoryFilter.set('Paid')">
-            Paid <span class="v3-tab-count">{{ invoiceCategoryCounts().paid }}</span>
-          </button>
-          <button type="button" class="v3-tab-btn text-muted" [class.active]="invoiceCategoryFilter() === 'Cancelled'"
-            (click)="invoiceCategoryFilter.set('Cancelled')">
-            Cancelled <span class="v3-tab-count">{{ invoiceCategoryCounts().cancelled }}</span>
-          </button>
+      <!-- Page Header (POS /guest-folio Style) -->
+      <div class="dashboard-header-row">
+        <div>
+          <h1 class="page-title">Daftar Invoice &amp; Tagihan Folio</h1>
+          <p class="page-subtitle">Manajemen tagihan piutang korporat, room charge tamu in-house, serta event banquet hotel.</p>
         </div>
-
         <div class="d-flex align-items-center gap-2">
           <button type="button" class="v3-btn-primary text-nowrap" [disabled]="isViewer"
             (click)="startCreateInvoice()">
-            + Buat Invoice
+            <i class="bi bi-plus-circle-fill"></i>
+            <span>+ Buat Invoice Baru</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 3 Summary Containers (/guest-folio Style: Aktivitas AR, Distribusi Status, Validasi Penagihan) -->
+      <div class="folio-summary-cards">
+        <!-- Container 1: Aktivitas Piutang -->
+        <div class="folio-s-card card-blue">
+          <div class="s-card-top">
+            <span>Total Sisa Tagihan (AR)</span>
+            <div class="icon-box">
+              <i class="bi bi-receipt-cutoff"></i>
+            </div>
+          </div>
+          <div class="s-card-value">
+            <h2 class="v3-mono">{{ filteredSummary().balanceDue | rupiah }}</h2>
+          </div>
+          <div class="s-card-footer">
+            <div class="s-meta-item">
+              <i class="bi bi-file-earmark-text"></i>
+              <span>{{ filteredSummary().count }} Dokumen Ditampilkan</span>
+            </div>
+            <div class="s-meta-item highlight">
+              <span>Nilai: {{ filteredSummary().totalAmount | rupiah }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Container 2: Distribusi Status Faktur (Split Rows from /guest-folio) -->
+        <div class="folio-s-card card-distribution">
+          <div class="s-card-top">
+            <span>Distribusi Tagihan Aktif</span>
+            <div class="icon-box">
+              <i class="bi bi-pie-chart-fill"></i>
+            </div>
+          </div>
+          <div class="s-split-rows">
+            <div class="s-split-row">
+              <div class="split-left">
+                <i class="bi bi-check2-square text-primary"></i>
+                <span>Issued &amp; Partial</span>
+              </div>
+              <div class="split-right">
+                <strong>{{ invoiceCategoryCounts().issued + invoiceCategoryCounts().partiallyPaid }} Faktur</strong>
+                <small>{{ invoiceCategoryCounts().draft }} Draft</small>
+              </div>
+            </div>
+            <div class="s-split-row">
+              <div class="split-left">
+                <i class="bi bi-exclamation-triangle-fill text-danger"></i>
+                <span>Jatuh Tempo (Overdue)</span>
+              </div>
+              <div class="split-right">
+                <strong class="text-danger">{{ invoiceCategoryCounts().overdue }} Faktur</strong>
+                <small>{{ arService.dashboardMetrics().totalOverdue | rupiah }}</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Container 3: Validasi Pelunasan & PMS -->
+        <div class="folio-s-card card-emerald">
+          <div class="s-card-top">
+            <span>Faktur Lunas &amp; Terverifikasi</span>
+            <div class="icon-box">
+              <i class="bi bi-shield-check"></i>
+            </div>
+          </div>
+          <div class="s-card-value">
+            <h2>{{ invoiceCategoryCounts().paid }}</h2>
+            <span>Invoice Paid</span>
+          </div>
+          <div class="s-card-footer">
+            <div class="pms-status-pill" [ngClass]="invoiceCategoryCounts().overdue > 0 ? 'warning' : 'success'">
+              <span class="status-indicator-dot" [class.warning]="invoiceCategoryCounts().overdue > 0"></span>
+              <span>{{ invoiceCategoryCounts().overdue > 0 ? invoiceCategoryCounts().overdue + ' Faktur Perlu Follow-Up' : 'Penagihan Berjalan Normal' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Horizontal Scrollable Filter Capsules (/guest-folio Style) -->
+      <div class="filter-capsules-scroll-wrapper">
+        <div class="filter-capsules-track">
+          <span class="text-muted small fw-bold pe-1 d-inline-flex align-items-center gap-1">
+            <i class="bi bi-funnel-fill"></i> Status:
+          </span>
+          <button type="button" class="capsule-filter-pill" [class.active]="invoiceCategoryFilter() === 'ALL'"
+            (click)="invoiceCategoryFilter.set('ALL')">
+            <i class="bi bi-grid"></i>
+            <span>Semua</span>
+            <span class="capsule-count">{{ invoiceCategoryCounts().all }}</span>
+          </button>
+          <button type="button" class="capsule-filter-pill" [class.active]="invoiceCategoryFilter() === 'Draft'"
+            (click)="invoiceCategoryFilter.set('Draft')">
+            <span>Draft</span>
+            <span class="capsule-count">{{ invoiceCategoryCounts().draft }}</span>
+          </button>
+          <button type="button" class="capsule-filter-pill" [class.active]="invoiceCategoryFilter() === 'Issued'"
+            (click)="invoiceCategoryFilter.set('Issued')">
+            <span>Issued</span>
+            <span class="capsule-count">{{ invoiceCategoryCounts().issued }}</span>
+          </button>
+          <button type="button" class="capsule-filter-pill" [class.active]="invoiceCategoryFilter() === 'Partially Paid'"
+            (click)="invoiceCategoryFilter.set('Partially Paid')">
+            <span>Partially Paid</span>
+            <span class="capsule-count">{{ invoiceCategoryCounts().partiallyPaid }}</span>
+          </button>
+          <button type="button" class="capsule-filter-pill text-danger" [class.active]="invoiceCategoryFilter() === 'Overdue'"
+            (click)="invoiceCategoryFilter.set('Overdue')">
+            <i class="bi bi-exclamation-circle"></i>
+            <span>Overdue</span>
+            <span class="capsule-count">{{ invoiceCategoryCounts().overdue }}</span>
+          </button>
+          <button type="button" class="capsule-filter-pill text-success" [class.active]="invoiceCategoryFilter() === 'Paid'"
+            (click)="invoiceCategoryFilter.set('Paid')">
+            <i class="bi bi-check-circle"></i>
+            <span>Paid</span>
+            <span class="capsule-count">{{ invoiceCategoryCounts().paid }}</span>
+          </button>
+          <button type="button" class="capsule-filter-pill text-muted" [class.active]="invoiceCategoryFilter() === 'Cancelled'"
+            (click)="invoiceCategoryFilter.set('Cancelled')">
+            <span>Cancelled</span>
+            <span class="capsule-count">{{ invoiceCategoryCounts().cancelled }}</span>
           </button>
         </div>
       </div>

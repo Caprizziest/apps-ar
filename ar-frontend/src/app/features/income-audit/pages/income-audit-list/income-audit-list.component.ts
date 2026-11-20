@@ -11,20 +11,91 @@ import { Payment } from '../../../../core/models/ar.models';
   imports: [CommonModule, FormsModule, RupiahPipe],
   template: `
     <div class="d-flex flex-column gap-3">
-      <!-- Header -->
-      <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+      <!-- Page Header (POS /guest-folio Style) -->
+      <div class="dashboard-header-row">
         <div>
-          <h2 class="h5 fw-bold text-dark mb-1">Income Audit</h2>
-          <p class="text-secondary small mb-0">
-            Pemeriksaan fisik slip setoran & pencocokan mutasi rekening koran bank terhadap jurnal penerimaan kas AR.
+          <h1 class="page-title">Income Audit &amp; Rekonsiliasi Bank</h1>
+          <p class="page-subtitle">
+            Pemeriksaan fisik slip setoran &amp; pencocokan mutasi rekening koran bank terhadap jurnal penerimaan kas AR.
           </p>
         </div>
-        <div class="d-flex align-items-center gap-3">
-          <div>
-            <span class="text-muted small">Status Verifikasi:</span>
-            <span class="text-warning-emphasis fw-semibold small ms-1">{{ pendingIncomeAuditCount() }} Pending</span>
-            <span class="text-muted small mx-1">&bull;</span>
-            <span class="text-success fw-semibold small">{{ arService.payments().length - pendingIncomeAuditCount() }} Terverifikasi</span>
+        <div class="d-flex align-items-center gap-2">
+          <div class="pms-status-pill" [ngClass]="pendingIncomeAuditCount() > 0 ? 'warning' : 'success'">
+            <span class="status-indicator-dot" [class.warning]="pendingIncomeAuditCount() > 0"></span>
+            <span>{{ pendingIncomeAuditCount() > 0 ? pendingIncomeAuditCount() + ' Transaksi Menunggu Verifikasi FA' : 'Semua Mutasi Bank Terverifikasi' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3 Summary Containers (/guest-folio Style) -->
+      <div class="folio-summary-cards">
+        <div class="folio-s-card card-blue">
+          <div class="s-card-top">
+            <span>Total Transaksi Kas Masuk</span>
+            <div class="icon-box"><i class="bi bi-bank2"></i></div>
+          </div>
+          <div class="s-card-value">
+            <h2>{{ arService.payments().length }}</h2>
+            <span>Jurnal Penerimaan</span>
+          </div>
+          <div class="s-card-footer">
+            <div class="s-meta-item">
+              <i class="bi bi-building-check"></i>
+              <span>{{ incomeAuditBankSummaries().length }} Kanal Rekening &amp; Kas</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="folio-s-card card-distribution">
+          <div class="s-card-top">
+            <span>Distribusi Status Verifikasi FA</span>
+            <div class="icon-box"><i class="bi bi-shield-check"></i></div>
+          </div>
+          <div class="s-split-rows">
+            <div class="s-split-row">
+              <div class="split-left">
+                <i class="bi bi-check-circle-fill text-success"></i>
+                <span>Terverifikasi (Valid)</span>
+              </div>
+              <div class="split-right">
+                <strong class="text-success">{{ arService.payments().length - pendingIncomeAuditCount() }} Slip</strong>
+                <small>Verified FA</small>
+              </div>
+            </div>
+            <div class="s-split-row">
+              <div class="split-left">
+                <i class="bi bi-clock-history text-warning"></i>
+                <span>Menunggu Audit</span>
+              </div>
+              <div class="split-right">
+                <strong class="text-warning-emphasis">{{ pendingIncomeAuditCount() }} Slip</strong>
+                <small>Pending FA</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="folio-s-card card-emerald">
+          <div class="s-card-top">
+            <span>Mode Tampilan Audit</span>
+            <div class="icon-box"><i class="bi bi-layers-half"></i></div>
+          </div>
+          <div class="d-flex align-items-center gap-2 my-1">
+            <button type="button" class="capsule-filter-pill flex-grow-1 justify-content-center"
+              [class.active]="incomeAuditViewMode() === 'grouped'"
+              (click)="incomeAuditViewMode.set('grouped')">
+              <i class="bi bi-collection"></i>
+              <span>Grup per Bank</span>
+            </button>
+            <button type="button" class="capsule-filter-pill flex-grow-1 justify-content-center"
+              [class.active]="incomeAuditViewMode() === 'table'"
+              (click)="incomeAuditViewMode.set('table')">
+              <i class="bi bi-table"></i>
+              <span>Tabel Gabungan</span>
+            </button>
+          </div>
+          <div class="s-card-footer">
+            <span class="text-muted" style="font-size: 0.75rem;">Klik Verifikasi setelah cek rekening koran</span>
           </div>
         </div>
       </div>

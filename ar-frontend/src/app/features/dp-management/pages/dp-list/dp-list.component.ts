@@ -10,67 +10,72 @@ import { RupiahPipe } from '../../../../shared/pipes/rupiah.pipe';
   imports: [CommonModule, FormsModule, RupiahPipe],
   template: `
     <div class="d-flex flex-column gap-3">
-      <!-- Header -->
-      <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+      <!-- Header (POS Style) -->
+      <div class="dashboard-header-row">
         <div>
-          <h2 class="h5 fw-bold text-dark mb-1">Pengelolaan Saldo Uang Muka (DP)</h2>
-          <p class="text-secondary small mb-0">
-            Pencatatan deposit dan buku pembantu uang muka per pelanggan.
+          <h1 class="page-title">Pengelolaan Saldo Uang Muka (DP)</h1>
+          <p class="page-subtitle">
+            Pencatatan deposit reservasi kamar/banquet dan buku pembantu uang muka per pelanggan.
           </p>
         </div>
         <div class="d-flex align-items-center gap-2">
-          <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="isViewer" (click)="openApplyDpModal()">
-            Alokasikan Potongan DP
+          <button type="button" class="v3-btn-secondary" [disabled]="isViewer" (click)="openApplyDpModal()">
+            <i class="bi bi-arrow-left-right"></i>
+            <span>Alokasikan Potongan DP</span>
           </button>
-          <button type="button" class="btn btn-sm btn-primary" [disabled]="isViewer" (click)="openRecordDpModal()">
-            Catat Setoran DP Baru
+          <button type="button" class="v3-btn-primary" [disabled]="isViewer" (click)="openRecordDpModal()">
+            <i class="bi bi-plus-circle-fill"></i>
+            <span>+ Catat Setoran DP Baru</span>
           </button>
         </div>
       </div>
 
-      <!-- 3 KPI Cards -->
-      <div class="row g-3">
-        <div class="col-12 col-md-4">
-          <div class="v3-kpi-card">
-            <div class="v3-kpi-header">
-              <span class="text-secondary fw-semibold small text-uppercase">Total Saldo DP Mengendap</span>
-              <i class="bi bi-wallet2 text-warning fs-5"></i>
-            </div>
-            <div class="v3-kpi-value text-dark v3-mono">
-              {{ customerTotalAvailableDp() | rupiah }}
-            </div>
-            <div class="v3-kpi-meta text-muted small">
-              Tersedia untuk pemotongan tagihan invoice
+      <!-- 3 Summary Containers (/guest-folio Style) -->
+      <div class="folio-summary-cards">
+        <div class="folio-s-card card-distribution">
+          <div class="s-card-top">
+            <span>Total Saldo DP Mengendap</span>
+            <div class="icon-box"><i class="bi bi-piggy-bank-fill"></i></div>
+          </div>
+          <div class="s-card-value">
+            <h2 class="v3-mono">{{ customerTotalAvailableDp() | rupiah }}</h2>
+          </div>
+          <div class="s-card-footer">
+            <div class="s-meta-item">
+              <i class="bi bi-check2-circle text-success"></i>
+              <span>Tersedia untuk pemotongan tagihan invoice</span>
             </div>
           </div>
         </div>
 
-        <div class="col-12 col-md-4">
-          <div class="v3-kpi-card">
-            <div class="v3-kpi-header">
-              <span class="text-secondary fw-semibold small text-uppercase">Total Setoran DP Diterima</span>
-              <i class="bi bi-arrow-down-circle text-success fs-5"></i>
-            </div>
-            <div class="v3-kpi-value text-success v3-mono">
-              {{ totalDpDeposits() | rupiah }}
-            </div>
-            <div class="v3-kpi-meta text-muted small">
-              Akumulasi setoran advance payment
+        <div class="folio-s-card card-emerald">
+          <div class="s-card-top">
+            <span>Total Setoran DP Diterima</span>
+            <div class="icon-box"><i class="bi bi-arrow-down-circle-fill"></i></div>
+          </div>
+          <div class="s-card-value">
+            <h2 class="v3-mono text-success">{{ totalDpDeposits() | rupiah }}</h2>
+          </div>
+          <div class="s-card-footer">
+            <div class="s-meta-item">
+              <i class="bi bi-cash-coin"></i>
+              <span>Akumulasi setoran advance payment</span>
             </div>
           </div>
         </div>
 
-        <div class="col-12 col-md-4">
-          <div class="v3-kpi-card">
-            <div class="v3-kpi-header">
-              <span class="text-secondary fw-semibold small text-uppercase">Total DP Terpakai / Dipotong</span>
-              <i class="bi bi-arrow-up-circle text-primary fs-5"></i>
-            </div>
-            <div class="v3-kpi-value text-primary v3-mono">
-              {{ totalDpDeductions() | rupiah }}
-            </div>
-            <div class="v3-kpi-meta text-muted small">
-              Telah dipotongkan pada invoice yang diterbitkan
+        <div class="folio-s-card card-blue">
+          <div class="s-card-top">
+            <span>Total DP Terpakai / Dipotong</span>
+            <div class="icon-box"><i class="bi bi-arrow-up-circle-fill"></i></div>
+          </div>
+          <div class="s-card-value">
+            <h2 class="v3-mono text-primary">{{ totalDpDeductions() | rupiah }}</h2>
+          </div>
+          <div class="s-card-footer">
+            <div class="s-meta-item">
+              <i class="bi bi-receipt"></i>
+              <span>Telah dipotongkan pada invoice terbit</span>
             </div>
           </div>
         </div>

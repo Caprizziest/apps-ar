@@ -13,34 +13,27 @@ import { ConfirmDialogComponent, DeleteModalState } from '../../../../shared/com
   imports: [CommonModule, FormsModule, RupiahPipe, ConfirmDialogComponent],
   template: `
     <div class="d-flex flex-column gap-3">
-      <!-- Header & Action Ribbon -->
-      <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+      <!-- Header & Action Ribbon (POS Style) -->
+      <div class="dashboard-header-row">
         <div>
-          <h2 class="h5 fw-bold text-dark mb-1">Riwayat Pembayaran</h2>
-          <p class="text-secondary small mb-0">
-            Jurnal transaksi penerimaan kas dan mutasi bank masuk.
+          <h1 class="page-title">Riwayat Pembayaran &amp; Jurnal Kas</h1>
+          <p class="page-subtitle">
+            Jurnal transaksi penerimaan kas, pelunasan faktur folio, dan mutasi bank masuk.
           </p>
         </div>
         <div class="d-flex align-items-center gap-2">
+          <button type="button" class="v3-btn-secondary" (click)="navService.navigateTo('income-audit')">
+            <i class="bi bi-shield-check text-primary"></i>
+            <span>Income Audit</span>
+            <span *ngIf="pendingIncomeAuditCount() > 0" class="badge bg-warning text-dark ms-1 rounded-pill">
+              {{ pendingIncomeAuditCount() }} Pending
+            </span>
+          </button>
           <button type="button" class="v3-btn-primary" [disabled]="isViewer" (click)="openPaymentModal()">
-            <i class="bi bi-plus-lg me-1"></i>
+            <i class="bi bi-plus-circle-fill"></i>
             <span>+ Catat Pembayaran</span>
           </button>
         </div>
-      </div>
-
-      <!-- Sub-nav link to Income Audit -->
-      <div class="d-flex align-items-center justify-content-between p-2.5 rounded bg-light border">
-        <div class="d-flex align-items-center gap-2">
-          <i class="bi bi-shield-check text-primary"></i>
-          <span class="text-secondary small">Verifikasi mutasi kas & bank masuk oleh tim Finance.</span>
-        </div>
-        <button type="button" class="btn btn-sm btn-outline-primary py-1 px-2.5" (click)="navService.navigateTo('income-audit')">
-          <span>Income Audit</span>
-          <span *ngIf="pendingIncomeAuditCount() > 0" class="badge bg-warning text-dark ms-1">
-            {{ pendingIncomeAuditCount() }} Pending
-          </span>
-        </button>
       </div>
 
       <!-- Filter & Search Toolbar -->

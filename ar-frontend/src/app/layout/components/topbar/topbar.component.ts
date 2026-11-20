@@ -10,18 +10,19 @@ import { ArDataService } from '../../../core/services/ar-data.service';
   template: `
     <header class="v3-topbar">
       <div class="d-flex align-items-center gap-3">
-        <button type="button" class="btn btn-sm btn-outline-secondary d-lg-none"
-          (click)="navService.toggleSidebarMobile()">
-          Menu
+        <button type="button" class="v3-burger-btn d-lg-none"
+          (click)="navService.toggleSidebarMobile()"
+          title="Buka Menu">
+          <i class="bi bi-list fs-5"></i>
         </button>
 
         <div class="v3-breadcrumb">
-          <span class="v3-breadcrumb-root">Sistem Piutang Usaha</span>
-          <span class="text-muted">/</span>
+          <span class="v3-breadcrumb-root">Galesong Hospitality</span>
+          <span class="v3-breadcrumb-sep">/</span>
           <span class="v3-breadcrumb-current">
             <ng-container [ngSwitch]="navService.activeView()">
               <span *ngSwitchCase="'dashboard'">Ikhtisar Finansial AR</span>
-              <span *ngSwitchCase="'invoices'">Daftar Invoice</span>
+              <span *ngSwitchCase="'invoices'">Daftar Invoice & Folio</span>
               <span *ngSwitchCase="'invoice-create'">Buat Invoice Baru</span>
               <span *ngSwitchCase="'invoice-edit'">Ubah Invoice Draft</span>
               <span *ngSwitchCase="'invoice-detail'">Faktur {{ navService.selectedInvoice()?.invoiceNumber }}</span>
@@ -30,36 +31,46 @@ import { ArDataService } from '../../../core/services/ar-data.service';
               <span *ngSwitchCase="'customers'">Data Pelanggan</span>
               <span *ngSwitchCase="'customer-detail'">{{ navService.selectedCustomer()?.name }}</span>
               <span *ngSwitchCase="'aging-report'">Umur Piutang (Aging)</span>
-              <span *ngSwitchCase="'bank-accounts'">Rekening Bank</span>
+              <span *ngSwitchCase="'bank-accounts'">Rekening Bank Hotel</span>
               <span *ngSwitchCase="'activity-logs'">Log Aktivitas</span>
               <span *ngSwitchCase="'mutasi-piutang'">Laporan Mutasi Piutang</span>
-              <span *ngSwitchCase="'kartu-piutang'">Kartu Piutang</span>
+              <span *ngSwitchCase="'kartu-piutang'">Kartu Piutang Seimbang</span>
               <span *ngSwitchCase="'dp-management'">Uang Muka (DP)</span>
             </ng-container>
           </span>
           <span class="v3-date-pill ms-2 d-none d-md-inline-flex" title="Tanggal Acuan Sistem">
-            {{ arService.today }}
+            <i class="bi bi-calendar3"></i>
+            <span>{{ arService.today }}</span>
           </span>
         </div>
       </div>
 
       <div class="d-flex align-items-center gap-2">
+        <!-- Dark / Light Mode Toggle (POS Manager Navbar Style) -->
+        <button type="button" class="v3-theme-toggle-btn"
+          (click)="navService.toggleDarkMode()"
+          [title]="navService.isDarkMode() ? 'Beralih ke Light Mode' : 'Beralih ke Dark Mode'">
+          <i class="bi" [ngClass]="navService.isDarkMode() ? 'bi-moon-stars-fill text-warning' : 'bi-sun-fill'"></i>
+        </button>
+
         <!-- Action Inbox Trigger -->
         <button type="button" class="v3-action-pill-btn" (click)="navService.toggleActionInbox()"
           title="Daftar Tindak Lanjut Penagihan & Draft">
           <i class="bi bi-bell-fill text-danger"></i>
-          <span>Tindak Lanjut</span>
+          <span class="d-none d-sm-inline">Tindak Lanjut</span>
           <span class="v3-pill-badge" *ngIf="actionItemCount > 0">
             {{ actionItemCount }}
           </span>
         </button>
 
         <button type="button" class="v3-btn-secondary" [disabled]="isViewer" (click)="onRecordPayment()">
-          <span>Catat Pembayaran</span>
+          <i class="bi bi-cash-coin"></i>
+          <span class="d-none d-md-inline">Catat Pembayaran</span>
         </button>
 
         <button type="button" class="v3-btn-primary" [disabled]="isViewer" (click)="onCreateInvoice()">
-          <span>+ Buat Invoice</span>
+          <i class="bi bi-plus-circle-fill"></i>
+          <span>Buat Invoice</span>
         </button>
       </div>
     </header>

@@ -1,147 +1,152 @@
 <div class="d-flex flex-column gap-4">
 
-  <!-- 4 Top Executive KPI Cards -->
-  <div class="row g-3">
+  <!-- Executive Header (Clean, No Extra Pills) -->
+  <div class="dashboard-header-row">
+    <div>
+      <h1 class="page-title">Ringkasan Eksekutif Piutang Usaha</h1>
+      <p class="page-subtitle">
+        Posisi saldo piutang berjalan, komposisi umur tagihan (aging), dan realisasi penerimaan kas.
+      </p>
+    </div>
+  </div>
+
+  <!-- 4 Executive Consolidated Metric Containers (/manager/dashboard style - Strictly 3 clean lines) -->
+  <div class="metrics-summary-grid">
     <!-- KPI 1: Total Outstanding AR -->
-    <div class="col-12 col-sm-6 col-xl-3">
-      <div class="v3-kpi-card h-100 cursor-pointer" (click)="navigateTo('invoices')">
-        <div class="v3-kpi-header">
-          <span class="text-secondary fw-semibold" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em;">Total Piutang Berjalan</span>
-        </div>
-        <div class="v3-kpi-value v3-mono text-dark">
-          {{ arService.dashboardMetrics().totalOutstanding | rupiah }}
-        </div>
-        <div class="v3-kpi-meta text-secondary">
-          <span class="small text-muted">{{ arService.dashboardMetrics().openInvoicesCount }} Invoice Aktif</span>
-          <span class="ms-auto text-primary small fw-semibold">Lihat Semua &rarr;</span>
-        </div>
+    <div class="metric-summary-card cursor-pointer" (click)="navigateTo('invoices')">
+      <div class="metric-icon-wrap icon-blue">
+        <i class="bi bi-wallet2"></i>
+      </div>
+      <div class="metric-data">
+        <span class="metric-label">Total Piutang Berjalan</span>
+        <h2 class="metric-value v3-mono">{{ arService.dashboardMetrics().totalOutstanding | rupiah }}</h2>
+        <span class="metric-trend text-primary">
+          <span>{{ arService.dashboardMetrics().openInvoicesCount }} Faktur Aktif</span>
+        </span>
       </div>
     </div>
 
     <!-- KPI 2: Overdue AR Risk -->
-    <div class="col-12 col-sm-6 col-xl-3">
-      <div class="v3-kpi-card h-100 cursor-pointer border-danger-subtle" (click)="navigateTo('invoices')">
-        <div class="v3-kpi-header">
-          <span class="text-danger fw-semibold" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em;">Piutang Jatuh Tempo</span>
-        </div>
-        <div class="v3-kpi-value v3-mono text-danger">
-          {{ arService.dashboardMetrics().totalOverdue | rupiah }}
-        </div>
-        <div class="v3-kpi-meta text-secondary">
-          <span class="small text-danger fw-semibold">{{ arService.dashboardMetrics().overdueInvoicesCount }} Overdue</span>
-          <span class="ms-auto text-danger small fw-semibold">Prioritas Tagih &rarr;</span>
-        </div>
+    <div class="metric-summary-card cursor-pointer" (click)="navigateTo('invoices')">
+      <div class="metric-icon-wrap icon-rose">
+        <i class="bi bi-exclamation-octagon"></i>
+      </div>
+      <div class="metric-data">
+        <span class="metric-label text-danger">Piutang Jatuh Tempo</span>
+        <h2 class="metric-value v3-mono text-danger">{{ arService.dashboardMetrics().totalOverdue | rupiah }}</h2>
+        <span class="metric-trend text-danger">
+          <span>{{ arService.dashboardMetrics().overdueInvoicesCount }} Faktur Melewati Tempo</span>
+        </span>
       </div>
     </div>
 
     <!-- KPI 3: Cash Collected This Month -->
-    <div class="col-12 col-sm-6 col-xl-3">
-      <div class="v3-kpi-card h-100 cursor-pointer" (click)="navigateTo('payments')">
-        <div class="v3-kpi-header">
-          <span class="text-secondary fw-semibold" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em;">Penerimaan Kas (Bulan Ini)</span>
-        </div>
-        <div class="v3-kpi-value v3-mono text-success">
-          {{ arService.dashboardMetrics().collectedThisMonth | rupiah }}
-        </div>
-        <div class="v3-kpi-meta text-secondary">
-          <span class="small text-success fw-semibold">{{ arService.dashboardMetrics().paidThisMonthCount }} Transaksi Masuk</span>
-          <span class="ms-auto text-success small fw-semibold">Jurnal Kas &rarr;</span>
-        </div>
+    <div class="metric-summary-card cursor-pointer" (click)="navigateTo('payments')">
+      <div class="metric-icon-wrap icon-green">
+        <i class="bi bi-cash-stack"></i>
+      </div>
+      <div class="metric-data">
+        <span class="metric-label">Penerimaan Kas (Bulan Ini)</span>
+        <h2 class="metric-value v3-mono text-success">{{ arService.dashboardMetrics().collectedThisMonth | rupiah }}
+        </h2>
+        <span class="metric-trend text-success">
+          <span>{{ arService.dashboardMetrics().paidThisMonthCount }} Transaksi Masuk</span>
+        </span>
       </div>
     </div>
 
     <!-- KPI 4: DSO (Days Sales Outstanding) -->
-    <div class="col-12 col-sm-6 col-xl-3">
-      <div class="v3-kpi-card h-100">
-        <div class="v3-kpi-header">
-          <span class="text-secondary fw-semibold" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em;">Days Sales Outstanding (DSO)</span>
-        </div>
-        <div class="d-flex align-items-baseline gap-2 mb-1">
-          <div class="v3-kpi-value v3-mono text-dark mb-0">
-            {{ computedDSO().days }} <span class="fs-6 fw-normal text-secondary">Hari</span>
-          </div>
-          <span class="badge px-2 py-1 rounded-pill small" [ngClass]="computedDSO().badgeClass">
-            {{ computedDSO().statusText }}
-          </span>
-        </div>
-        <div class="v3-kpi-meta text-secondary" style="font-size: 0.7rem; line-height: 1.3;">
-          {{ computedDSO().statusDesc }}
-        </div>
+    <div class="metric-summary-card">
+      <div class="metric-icon-wrap icon-amber">
+        <i class="bi bi-speedometer2"></i>
+      </div>
+      <div class="metric-data">
+        <span class="metric-label">Days Sales Outstanding</span>
+        <h2 class="metric-value v3-mono">{{ computedDSO().days }} Hari</h2>
+        <span class="metric-trend" [ngClass]="computedDSO().days > 30 ? 'text-warning-emphasis' : 'text-success'">
+          <span>{{ computedDSO().statusText }}</span>
+        </span>
       </div>
     </div>
   </div>
 
-  <!-- Grafik Distribusi Umur Piutang -->
-  <div class="v3-aging-chart-card">
-    <div class="v3-card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
-      <div>
-        <h3 class="v3-card-title">
-          <i class="bi bi-bar-chart-line-fill text-primary"></i>
-          <span>Grafik Komposisi Umur Piutang (Aging Breakdown)</span>
-        </h3>
-        <p class="v3-card-subtitle">Distribusi saldo tagihan hotel berdasarkan lamanya keterlambatan pembayaran</p>
+  <!-- Komposisi Umur Piutang (POS Donut + Horizontal Progress Bars Layout) -->
+  <div class="sales-chart-card">
+    <div class="chart-header">
+      <div class="chart-title-wrap">
+        <div class="chart-icon-box">
+          <i class="bi bi-pie-chart-fill"></i>
+        </div>
+        <div>
+          <h3 class="v3-card-title">Komposisi Umur Piutang (Aging Breakdown)</h3>
+          <p class="v3-card-subtitle">Distribusi kualitas piutang dari belum jatuh tempo hingga tunggakan kritis</p>
+        </div>
       </div>
-      <div class="d-flex align-items-center gap-2">
-        <button type="button" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1"
-          (click)="navigateTo('aging-report')">
-          <span>Buka Matriks Aging Lengkap</span>
-          <i class="bi bi-arrow-right"></i>
-        </button>
-      </div>
+      <button type="button" class="v3-btn-secondary py-1.5 px-3" (click)="navigateTo('aging-report')">
+        <span>Laporan Aging</span>
+        <i class="bi bi-arrow-right"></i>
+      </button>
     </div>
 
-    <div class="v3-chart-stage">
-      <!-- 5 Column Bars Grid -->
-      <div class="v3-chart-columns-grid">
-        <div *ngFor="let col of agingChartData().buckets" class="v3-chart-col"
-          (click)="navigateTo('aging-report')" [title]="col.label + ' (' + col.sublabel + '): ' + (col.amount | rupiah)">
-          
-          <div class="v3-col-val v3-mono">
-            {{ col.amount | rupiah }}
+    <div class="aging-composition-layout">
+      <!-- Left: Dynamic SVG Donut + Lancar vs Overdue Split -->
+      <div class="aging-donut-panel">
+        <div class="aging-donut-wrap">
+          <svg class="aging-donut-svg" viewBox="0 0 176 176">
+            <circle cx="88" cy="88" r="68" fill="none" stroke="#e2e8f0" stroke-width="18"></circle>
+            <circle *ngFor="let seg of agingChartData().buckets"
+              cx="88" cy="88" r="68" fill="none"
+              [attr.stroke]="seg.color"
+              stroke-width="18"
+              [attr.stroke-dasharray]="seg.dashArray"
+              [attr.stroke-dashoffset]="seg.dashOffset"
+              stroke-linecap="butt">
+            </circle>
+          </svg>
+          <div class="aging-donut-center">
+            <span class="aging-donut-eyebrow">Rasio Lancar</span>
+            <span class="aging-donut-pct">{{ agingChartData().currentPct }}%</span>
+            <span class="aging-donut-sub">On-Schedule</span>
           </div>
+        </div>
 
-          <div class="v3-col-bar-track">
-            <div class="v3-col-bar-fill" [ngClass]="col.barClass" [style.height.%]="col.heightPct">
-              <span class="v3-col-pct-tag" *ngIf="col.pct > 0">{{ col.pct }}%</span>
-            </div>
+        <div class="aging-health-split">
+          <div class="aging-health-box">
+            <span class="aging-health-label text-success">Belum Tempo</span>
+            <span class="aging-health-val">{{ agingChartData().currentAmount | rupiah }}</span>
           </div>
-
-          <div class="v3-col-footer">
-            <div class="v3-col-name">
-              <span class="v3-log-dot" [ngClass]="col.dotClass"></span>
-              <span>{{ col.label }}</span>
-            </div>
-            <div class="v3-col-desc">{{ col.sublabel }}</div>
+          <div class="aging-health-box">
+            <span class="aging-health-label text-danger">Jatuh Tempo</span>
+            <span class="aging-health-val text-danger">{{ agingChartData().overdueAmount | rupiah }}</span>
           </div>
         </div>
       </div>
 
-      <!-- Chart Legend Bar -->
-      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-3 mt-1">
-        <div class="d-flex align-items-center gap-3 flex-wrap small text-secondary">
-          <span class="d-flex align-items-center gap-1">
-            <span class="v3-log-dot dot-green"></span>
-            <span>Belum Tempo: <strong>{{ agingDistribution().currentPct }}%</strong></span>
-          </span>
-          <span class="d-flex align-items-center gap-1">
-            <span class="v3-log-dot dot-blue"></span>
-            <span>1-30 Hari: <strong>{{ agingDistribution().days1_30Pct }}%</strong></span>
-          </span>
-          <span class="d-flex align-items-center gap-1">
-            <span class="v3-log-dot dot-yellow"></span>
-            <span>31-60 Hari: <strong>{{ agingDistribution().days31_60Pct }}%</strong></span>
-          </span>
-          <span class="d-flex align-items-center gap-1">
-            <span class="v3-log-dot dot-orange"></span>
-            <span>61-90 Hari: <strong>{{ agingDistribution().days61_90Pct }}%</strong></span>
-          </span>
-          <span class="d-flex align-items-center gap-1 text-danger">
-            <span class="v3-log-dot dot-red"></span>
-            <span>&gt;90 Hari (Kritis): <strong>{{ agingDistribution().days90PlusPct }}%</strong></span>
-          </span>
-        </div>
-        <div class="text-muted small" style="font-size: 0.72rem;">
-          *Klik pada kolom grafik untuk langsung memeriksa daftar faktur terkait
+      <!-- Right: 5 Horizontal Progress Breakdown Rows -->
+      <div class="aging-rows-list">
+        <div *ngFor="let col of agingChartData().buckets" class="aging-row-item"
+          (click)="navigateTo('aging-report')">
+          <div class="aging-row-left">
+            <span class="aging-row-dot" [style.background-color]="col.color"></span>
+            <div>
+              <div class="aging-row-title">{{ col.label }}</div>
+              <div class="aging-row-sub">{{ col.sublabel }}</div>
+            </div>
+          </div>
+
+          <div class="aging-row-bar-wrap">
+            <div class="aging-row-track">
+              <div class="aging-row-fill"
+                [style.width.%]="col.pct"
+                [style.background-color]="col.color">
+              </div>
+            </div>
+          </div>
+
+          <div class="aging-row-right">
+            <span class="aging-row-amount">{{ col.amount | rupiah }}</span>
+            <span class="aging-row-pct">{{ col.pct }}%</span>
+          </div>
         </div>
       </div>
     </div>
@@ -153,33 +158,27 @@
     <div class="col-12 col-xl-7">
       <div class="v3-card h-100 d-flex flex-column">
         <div class="v3-card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
-          <div class="d-flex align-items-center gap-2">
-            <div class="btn-group btn-group-sm" role="group">
-              <button type="button" class="btn"
-                [class.btn-danger]="dashboardDebtorTab() === 'overdue'"
-                [class.btn-outline-secondary]="dashboardDebtorTab() !== 'overdue'"
-                (click)="dashboardDebtorTab.set('overdue')">
-                <i class="bi bi-exclamation-circle-fill me-1"></i>
-                <span>Prioritas Penagihan Overdue ({{ priorityOverdueInvoices().length }})</span>
-              </button>
-              <button type="button" class="btn"
-                [class.btn-primary]="dashboardDebtorTab() === 'debtors'"
-                [class.btn-outline-secondary]="dashboardDebtorTab() !== 'debtors'"
-                (click)="dashboardDebtorTab.set('debtors')">
-                <i class="bi bi-people-fill me-1"></i>
-                <span>Top Saldo Debitur</span>
-              </button>
-            </div>
+          <div class="v3-clean-tabs">
+            <button type="button" class="v3-clean-tab"
+              [class.active]="dashboardDebtorTab() === 'overdue'"
+              (click)="dashboardDebtorTab.set('overdue')">
+              Prioritas Overdue ({{ priorityOverdueInvoices().length }})
+            </button>
+            <button type="button" class="v3-clean-tab"
+              [class.active]="dashboardDebtorTab() === 'debtors'"
+              (click)="dashboardDebtorTab.set('debtors')">
+              Top Saldo Debitur ({{ topDebtorCustomers().length }})
+            </button>
           </div>
 
           <div>
-            <button *ngIf="dashboardDebtorTab() === 'overdue'" type="button" class="btn btn-sm btn-link text-decoration-none p-0 text-danger"
-              (click)="navService.toggleActionInbox()">
-              Buka Drawer Tindak Lanjut &rarr;
+            <button *ngIf="dashboardDebtorTab() === 'overdue'" type="button" class="btn btn-sm btn-link text-decoration-none p-0 fw-bold"
+              (click)="navigateTo('invoices')">
+              Semua Faktur &rarr;
             </button>
-            <button *ngIf="dashboardDebtorTab() === 'debtors'" type="button" class="btn btn-sm btn-link text-decoration-none p-0"
-              (click)="navigateTo('customers')">
-              Kelola Semua Pelanggan &rarr;
+            <button *ngIf="dashboardDebtorTab() === 'debtors'" type="button"
+              class="btn btn-sm btn-link text-decoration-none p-0 fw-bold" (click)="navigateTo('customers')">
+              Semua Pelanggan &rarr;
             </button>
           </div>
         </div>
@@ -189,37 +188,33 @@
           <table class="v3-table v3-table-fit">
             <thead>
               <tr>
-                <th style="width: 25%;">No. Invoice & Tempo</th>
-                <th style="width: 33%;">Pelanggan & Kontak PIC</th>
+                <th style="width: 26%;">No. Faktur</th>
+                <th style="width: 34%;">Pelanggan</th>
                 <th style="width: 18%;">Keterlambatan</th>
-                <th style="width: 24%; text-align: right;">Sisa Tagihan</th>
+                <th style="width: 22%; text-align: right;">Sisa Tagihan</th>
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let inv of priorityOverdueInvoices().slice(0, 5)" class="align-middle">
+              <tr *ngFor="let inv of priorityOverdueInvoices().slice(0, 5)"
+                class="align-middle cursor-pointer"
+                (click)="viewInvoice(inv)">
                 <td>
-                  <div class="v3-mono fw-bold text-dark cursor-pointer text-primary-hover" (click)="viewInvoice(inv)">
-                    {{ inv.invoiceNumber }}
-                  </div>
-                  <div class="text-secondary small" style="font-size: 0.7rem;">Tempo: {{ inv.dueDate }}</div>
+                  <div class="fw-bold text-dark">{{ inv.invoiceNumber }}</div>
+                  <div class="text-muted" style="font-size: 0.72rem;">Tempo: {{ inv.dueDate }}</div>
                 </td>
                 <td>
                   <div class="fw-semibold text-dark">{{ inv.customerName }}</div>
-                  <div class="text-muted small" *ngIf="getCustomer(inv.customerId) as cust" style="font-size: 0.7rem;">
-                    {{ cust.contactPerson }} &bull; {{ cust.phone }}
+                  <div class="text-muted" *ngIf="getCustomer(inv.customerId) as cust" style="font-size: 0.72rem;">
+                    {{ cust.contactPerson }}
                   </div>
                 </td>
                 <td>
-                  <span class="text-danger fw-semibold small">
-                    {{ getDaysPastDue(inv.dueDate) }} Hari Lewat
+                  <span class="text-danger fw-bold" style="font-size: 0.8rem;">
+                    +{{ getDaysPastDue(inv.dueDate) }} Hari
                   </span>
                 </td>
                 <td class="text-end">
-                  <div class="v3-mono fw-bold text-danger">{{ inv.balanceDue | rupiah }}</div>
-                  <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 mt-1" style="font-size: 0.7rem;"
-                    (click)="viewInvoice(inv)">
-                    Detail &rarr;
-                  </button>
+                  <span class="fw-bold text-danger" style="font-size: 0.9rem;">{{ inv.balanceDue | rupiah }}</span>
                 </td>
               </tr>
               <tr *ngIf="priorityOverdueInvoices().length === 0">
@@ -238,49 +233,40 @@
           <table class="v3-table v3-table-fit">
             <thead>
               <tr>
-                <th style="width: 32%;">Pelanggan</th>
-                <th style="width: 24%;">Total Saldo</th>
-                <th style="width: 28%;">Utilisasi Limit</th>
-                <th style="width: 16%; text-align: right;">Aksi</th>
+                <th style="width: 38%;">Pelanggan</th>
+                <th style="width: 34%;">Utilisasi Plafon</th>
+                <th style="width: 28%; text-align: right;">Total Saldo</th>
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let item of topDebtorCustomers()" class="align-middle">
+              <tr *ngFor="let item of topDebtorCustomers()"
+                class="align-middle cursor-pointer"
+                (click)="viewCustomer(item.customer)">
                 <td>
-                  <div class="fw-bold text-dark cursor-pointer text-primary-hover" (click)="viewCustomer(item.customer)">
-                    {{ item.customer.name }}
-                  </div>
-                  <div class="text-secondary small font-monospace" style="font-size: 0.7rem;">{{ item.customer.code }}</div>
+                  <div class="fw-bold text-dark">{{ item.customer.name }}</div>
+                  <div class="text-muted" style="font-size: 0.72rem;">{{ item.customer.code }}</div>
                 </td>
                 <td>
-                  <div class="v3-mono fw-bold text-dark">{{ item.balance | rupiah }}</div>
-                  <div *ngIf="item.overdueCount > 0" class="text-danger small" style="font-size: 0.68rem;">
-                    {{ item.overdueCount }} Overdue
-                  </div>
-                </td>
-                <td>
-                  <div class="d-flex align-items-center justify-content-between small mb-1">
-                    <span class="text-secondary" style="font-size: 0.7rem;">{{ item.limitUsage }}%</span>
-                    <span class="text-muted" style="font-size: 0.68rem;">Maks: {{ item.customer.creditLimit | rupiah }}</span>
+                  <div class="d-flex align-items-center justify-content-between mb-1" style="font-size: 0.72rem;">
+                    <span class="fw-semibold text-secondary">{{ item.limitUsage }}%</span>
+                    <span class="text-muted">Plafon {{ item.customer.creditLimit | rupiah }}</span>
                   </div>
                   <div class="progress" style="height: 6px;">
-                    <div class="progress-bar"
-                      [class.bg-danger]="item.limitUsage >= 90"
+                    <div class="progress-bar" [class.bg-danger]="item.limitUsage >= 90"
                       [class.bg-warning]="item.limitUsage >= 70 && item.limitUsage < 90"
-                      [class.bg-primary]="item.limitUsage < 70"
-                      [style.width.%]="item.limitUsage">
+                      [class.bg-primary]="item.limitUsage < 70" [style.width.%]="item.limitUsage">
                     </div>
                   </div>
                 </td>
                 <td class="text-end">
-                  <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-2"
-                    (click)="viewCustomer(item.customer)" title="Buka Buku Pembantu Pelanggan">
-                    Buku Pembantu
-                  </button>
+                  <div class="fw-bold text-dark" style="font-size: 0.9rem;">{{ item.balance | rupiah }}</div>
+                  <div *ngIf="item.overdueCount > 0" class="text-danger fw-semibold" style="font-size: 0.7rem;">
+                    {{ item.overdueCount }} Overdue
+                  </div>
                 </td>
               </tr>
               <tr *ngIf="topDebtorCustomers().length === 0">
-                <td colspan="4" class="text-center text-muted py-4">
+                <td colspan="3" class="text-center text-muted py-4">
                   Tidak ada pelanggan dengan saldo piutang berjalan saat ini.
                 </td>
               </tr>
@@ -290,42 +276,30 @@
       </div>
     </div>
 
-    <!-- Right Column: Recent Payments Feed -->
+    <!-- Right Column: Recent Payments Feed (Clean & Balanced) -->
     <div class="col-12 col-xl-5">
       <div class="v3-card h-100 d-flex flex-column">
         <div class="v3-card-header d-flex align-items-center justify-content-between">
-          <div>
-            <h3 class="v3-card-title">
-              <i class="bi bi-wallet2 text-success"></i>
-              <span>Penerimaan Kas Terkini</span>
-            </h3>
-            <p class="v3-card-subtitle">Transaksi kas masuk yang berhasil terverifikasi di sistem</p>
-          </div>
-          <button type="button" class="btn btn-sm btn-link text-decoration-none p-0" (click)="navigateTo('payments')">
+          <h3 class="v3-card-title">Penerimaan Kas Terkini</h3>
+          <button type="button" class="btn btn-sm btn-link text-decoration-none p-0 fw-bold" (click)="navigateTo('payments')">
             Lihat Semua &rarr;
           </button>
         </div>
 
         <div class="p-3 flex-grow-1">
-          <div class="d-flex flex-column gap-2">
-            <div *ngFor="let p of recentPayments()" class="p-2 rounded-2 border bg-light d-flex align-items-center justify-content-between">
-              <div>
-                <div class="d-flex align-items-center gap-1.5 mb-1">
-                  <span class="v3-mono fw-bold text-dark small">{{ p.paymentNumber }}</span>
-                  <span class="text-muted small" style="font-size: 0.7rem;">&bull; {{ p.isDownPayment ? 'Uang Muka (DP)' : 'Pelunasan' }}</span>
-                </div>
-                <div class="text-secondary small fw-medium text-truncate" style="max-width: 180px;">
+          <div class="d-flex flex-column gap-2.5">
+            <div *ngFor="let p of recentPayments().slice(0, 4)" class="payment-feed-item">
+              <div class="overflow-hidden">
+                <div class="fw-bold text-dark text-truncate" style="font-size: 0.85rem;">
                   {{ p.customerName }}
                 </div>
-                <div class="text-muted" style="font-size: 0.68rem;">
-                  {{ p.paymentChannel }} &bull; {{ p.paymentDate }}
+                <div class="text-muted mt-0.5" style="font-size: 0.74rem;">
+                  {{ p.paymentNumber }} &bull; {{ p.paymentChannel }}
                 </div>
               </div>
-              <div class="text-end">
-                <div class="v3-mono fw-bold text-success">{{ p.amount | rupiah }}</div>
-                <div class="text-muted" style="font-size: 0.68rem;" *ngIf="p.referenceNumber">
-                  Ref: {{ p.referenceNumber }}
-                </div>
+              <div class="text-end flex-shrink-0">
+                <div class="fw-bold text-success" style="font-size: 0.92rem;">+{{ p.amount | rupiah }}</div>
+                <div class="text-muted" style="font-size: 0.72rem;">{{ p.paymentDate }}</div>
               </div>
             </div>
 

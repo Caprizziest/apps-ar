@@ -11,13 +11,14 @@ import { ConfirmDialogComponent, DeleteModalState } from '../../../shared/compon
   imports: [CommonModule, FormsModule, ConfirmDialogComponent],
   template: `
     <div class="d-flex flex-column gap-3">
-      <div class="d-flex align-items-center justify-content-between">
+      <div class="dashboard-header-row">
         <div>
-          <h3 class="fw-bold mb-1" style="font-size: 1.15rem;">Rekening Bank</h3>
-          <p class="text-muted small mb-0">Daftar rekening bank penerima pembayaran pelanggan.</p>
+          <h1 class="page-title">Rekening Bank Penerima &amp; Kas Hotel</h1>
+          <p class="page-subtitle">Daftar rekening bank resmi penerima pembayaran invoice dan deposit pelanggan.</p>
         </div>
         <button type="button" class="v3-btn-primary" [disabled]="!isAdmin" (click)="openNewBankAccountModal()">
-          + Tambah Rekening
+          <i class="bi bi-plus-circle-fill"></i>
+          <span>+ Tambah Rekening</span>
         </button>
       </div>
 

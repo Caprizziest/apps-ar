@@ -10,9 +10,11 @@ import { RupiahPipe } from '../../../shared/pipes/rupiah.pipe';
   imports: [CommonModule, FormsModule, RupiahPipe],
   template: `
     <div class="d-flex flex-column gap-3">
-      <div>
-        <h3 class="fw-bold mb-1" style="font-size: 1.15rem;">Log Aktivitas</h3>
-        <p class="text-muted small mb-0">Riwayat aktivitas dan pencatatan transaksi pada sistem.</p>
+      <div class="dashboard-header-row">
+        <div>
+          <h1 class="page-title">Log Aktivitas &amp; Jejak Audit (Audit Trail)</h1>
+          <p class="page-subtitle">Riwayat aktivitas pengguna dan pencatatan perubahan status transaksi pada sistem AR.</p>
+        </div>
       </div>
 
       <!-- Activity Logs Filter Bar -->

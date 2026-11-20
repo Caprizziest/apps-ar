@@ -14,26 +14,42 @@ import { ConfirmDialogComponent, DeleteModalState } from '../../../../shared/com
   imports: [CommonModule, FormsModule, RupiahPipe, CustomerFormModalComponent, ConfirmDialogComponent],
   template: `
     <div class="d-flex flex-column gap-3">
-      <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
-        <div class="v3-tabs-bar">
-          <button type="button" class="v3-tab-btn" [class.active]="customerFilter() === 'ALL'"
-            (click)="customerFilter.set('ALL')">
-            Semua Pelanggan ({{ arService.customers().length }})
-          </button>
-          <button type="button" class="v3-tab-btn text-danger" [class.active]="customerFilter() === 'OVERDUE'"
-            (click)="customerFilter.set('OVERDUE')">
-            Memiliki Overdue
-          </button>
-          <button type="button" class="v3-tab-btn" [class.active]="customerFilter() === 'HOLD'"
-            (click)="customerFilter.set('HOLD')">
-            Credit Hold
-          </button>
+      <!-- Page Header (POS Style) -->
+      <div class="dashboard-header-row">
+        <div>
+          <h1 class="page-title">Master Data Pelanggan &amp; Mitra Korporat</h1>
+          <p class="page-subtitle">Pengelolaan profil debitur, batas plafon kredit (credit limit), dan termin jatuh tempo.</p>
         </div>
-
         <button type="button" class="v3-btn-primary text-nowrap" [disabled]="isViewer"
           (click)="openNewCustomerModal()">
-          + Tambah Pelanggan
+          <i class="bi bi-person-plus-fill"></i>
+          <span>+ Tambah Pelanggan</span>
         </button>
+      </div>
+
+      <!-- Filter Capsules Track (/guest-folio Style) -->
+      <div class="filter-capsules-scroll-wrapper">
+        <div class="filter-capsules-track">
+          <span class="text-muted small fw-bold pe-1 d-inline-flex align-items-center gap-1">
+            <i class="bi bi-funnel-fill"></i> Kategori:
+          </span>
+          <button type="button" class="capsule-filter-pill" [class.active]="customerFilter() === 'ALL'"
+            (click)="customerFilter.set('ALL')">
+            <i class="bi bi-people"></i>
+            <span>Semua Pelanggan</span>
+            <span class="capsule-count">{{ arService.customers().length }}</span>
+          </button>
+          <button type="button" class="capsule-filter-pill text-danger" [class.active]="customerFilter() === 'OVERDUE'"
+            (click)="customerFilter.set('OVERDUE')">
+            <i class="bi bi-exclamation-circle"></i>
+            <span>Memiliki Overdue</span>
+          </button>
+          <button type="button" class="capsule-filter-pill" [class.active]="customerFilter() === 'HOLD'"
+            (click)="customerFilter.set('HOLD')">
+            <i class="bi bi-slash-circle"></i>
+            <span>Credit Hold</span>
+          </button>
+        </div>
       </div>
 
       <!-- Customers Secondary Filter Bar -->

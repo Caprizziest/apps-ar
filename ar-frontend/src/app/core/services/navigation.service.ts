@@ -28,6 +28,8 @@ export class NavigationService {
   // Active view state
   readonly activeView = signal<V3ActiveView>('dashboard');
   readonly sidebarMobileOpen = signal<boolean>(false);
+  readonly sidebarCollapsed = signal<boolean>(false);
+  readonly isDarkMode = signal<boolean>(false);
   readonly showActionInbox = signal<boolean>(false);
 
   // Selection states
@@ -74,6 +76,20 @@ export class NavigationService {
 
   toggleSidebarMobile() {
     this.sidebarMobileOpen.update(v => !v);
+  }
+
+  toggleSidebarCollapse() {
+    this.sidebarCollapsed.update(v => !v);
+  }
+
+  toggleDarkMode() {
+    this.isDarkMode.update(v => {
+      const next = !v;
+      if (typeof document !== 'undefined') {
+        document.body.classList.toggle('dark-mode', next);
+      }
+      return next;
+    });
   }
 
   toggleActionInbox() {
