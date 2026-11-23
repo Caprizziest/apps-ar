@@ -211,6 +211,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   font-family: 'Montserrat', sans-serif;
+  flex-shrink: 0;
 }
 
 .v3-sidebar.collapsed .v3-nav-group-label {
@@ -218,6 +219,7 @@
   height: 8px;
   padding: 0;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 /* POS Modern Floating Pill Menu Item */
@@ -239,6 +241,7 @@
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .v3-nav-item-content {
