@@ -1,1 +1,11 @@
 /apps_pos_fnb/
+diff.py
+logs_backup
+download_log.py
+download_logs.py
+/.playwright-mcp
+/.agent/
+/.agents/
+/.impeccable/
+/.claude/
+/.gemini/

@@ -12,7 +12,8 @@ import { ArDataService } from '../../../core/services/ar-data.service';
       <div class="d-flex align-items-center gap-3">
         <button type="button" class="v3-burger-btn d-lg-none"
           (click)="navService.toggleSidebarMobile()"
-          title="Buka Menu">
+          title="Buka Menu"
+          aria-label="Buka menu navigasi mobile">
           <i class="bi bi-list fs-5"></i>
         </button>
 
@@ -49,13 +50,15 @@ import { ArDataService } from '../../../core/services/ar-data.service';
         <!-- Dark / Light Mode Toggle (POS Manager Navbar Style) -->
         <button type="button" class="v3-theme-toggle-btn"
           (click)="navService.toggleDarkMode()"
-          [title]="navService.isDarkMode() ? 'Beralih ke Light Mode' : 'Beralih ke Dark Mode'">
+          [title]="navService.isDarkMode() ? 'Beralih ke Light Mode' : 'Beralih ke Dark Mode'"
+          [attr.aria-label]="navService.isDarkMode() ? 'Beralih ke mode terang' : 'Beralih ke mode gelap'">
           <i class="bi" [ngClass]="navService.isDarkMode() ? 'bi-moon-stars-fill text-warning' : 'bi-sun-fill'"></i>
         </button>
 
         <!-- Action Inbox Trigger -->
         <button type="button" class="v3-action-pill-btn" (click)="navService.toggleActionInbox()"
-          title="Daftar Tindak Lanjut Penagihan & Draft">
+          title="Daftar Tindak Lanjut Penagihan & Draft"
+          aria-label="Buka daftar tindak lanjut penagihan">
           <i class="bi bi-bell-fill text-danger"></i>
           <span class="d-none d-sm-inline">Tindak Lanjut</span>
           <span class="v3-pill-badge" *ngIf="actionItemCount > 0">

@@ -48,7 +48,8 @@ import { ConfirmDialogComponent, DeleteModalState } from '../../../../shared/com
               <input type="text" class="form-control border-start-0 ps-0"
                 placeholder="Cari no. kwitansi, pelanggan, referensi transfer..."
                 [ngModel]="paymentSearchQuery()"
-                (ngModelChange)="paymentSearchQuery.set($event)" />
+                (ngModelChange)="paymentSearchQuery.set($event)"
+                aria-label="Cari no kwitansi, pelanggan, atau referensi transfer" />
             </div>
           </div>
 
@@ -56,7 +57,8 @@ import { ConfirmDialogComponent, DeleteModalState } from '../../../../shared/com
           <div class="col-6 col-lg-2">
             <select class="form-select form-select-sm"
               [ngModel]="paymentMethodFilter()"
-              (ngModelChange)="paymentMethodFilter.set($event)">
+              (ngModelChange)="paymentMethodFilter.set($event)"
+              aria-label="Filter metode pembayaran">
               <option value="ALL">Semua Metode</option>
               <option value="bank_transfer">Bank Transfer</option>
               <option value="virtual_account">Virtual Account</option>
@@ -72,27 +74,31 @@ import { ConfirmDialogComponent, DeleteModalState } from '../../../../shared/com
             <input type="date" class="form-control form-select-sm"
               [ngModel]="paymentStartDate()"
               (ngModelChange)="paymentStartDate.set($event)"
-              placeholder="Dari tgl" title="Tanggal Mulai" />
+              placeholder="Dari tgl" title="Tanggal Mulai"
+              aria-label="Tanggal mulai pembayaran" />
           </div>
           <div class="col-6 col-lg-2">
             <input type="date" class="form-control form-select-sm"
               [ngModel]="paymentEndDate()"
               (ngModelChange)="paymentEndDate.set($event)"
-              placeholder="Sampai tgl" title="Tanggal Akhir" />
+              placeholder="Sampai tgl" title="Tanggal Akhir"
+              aria-label="Tanggal akhir pembayaran" />
           </div>
 
           <!-- Sort -->
           <div class="col-6 col-lg-2 d-flex gap-2">
             <select class="form-select form-select-sm"
               [ngModel]="paymentSortBy()"
-              (ngModelChange)="paymentSortBy.set($event)">
+              (ngModelChange)="paymentSortBy.set($event)"
+              aria-label="Urutkan daftar pembayaran">
               <option value="paymentDate_desc">Terbaru</option>
               <option value="paymentDate_asc">Terlama</option>
               <option value="amount_desc">Nominal Terbesar</option>
             </select>
 
             <button *ngIf="hasActivePaymentFilters()" type="button" class="btn btn-sm btn-outline-danger"
-              (click)="resetPaymentFilters()" title="Reset Filter">
+              (click)="resetPaymentFilters()" title="Reset Filter"
+              aria-label="Reset semua filter pembayaran">
               <i class="bi bi-x-circle"></i>
             </button>
           </div>
@@ -193,13 +199,15 @@ import { ConfirmDialogComponent, DeleteModalState } from '../../../../shared/com
                 <td class="text-end">
                   <div class="d-flex justify-content-end gap-1">
                     <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1.5"
-                      (click)="printKwitansi(p)" title="Cetak Kwitansi">
+                      (click)="printKwitansi(p)" title="Cetak Kwitansi"
+                      [attr.aria-label]="'Cetak kwitansi pembayaran ' + p.paymentNumber">
                       <i class="bi bi-printer"></i>
                     </button>
                     <button type="button" class="btn btn-sm btn-outline-danger py-0 px-1.5"
                       *ngIf="isManagerOrAdmin"
                       (click)="requestDeletePayment(p)"
-                      title="Batalkan pembayaran dan pulihkan saldo tagihan invoice">
+                      title="Batalkan pembayaran dan pulihkan saldo tagihan invoice"
+                      [attr.aria-label]="'Batalkan pembayaran ' + p.paymentNumber">
                       <i class="bi bi-arrow-counterclockwise"></i>
                     </button>
                   </div>

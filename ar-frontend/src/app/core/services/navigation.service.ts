@@ -32,6 +32,19 @@ export class NavigationService {
   readonly isDarkMode = signal<boolean>(false);
   readonly showActionInbox = signal<boolean>(false);
 
+  constructor() {
+    this.initTheme();
+  }
+
+  private initTheme() {
+    const saved = typeof localStorage !== 'undefined' ? localStorage.getItem('ar_dark_mode') === 'true' : false;
+    this.isDarkMode.set(saved);
+    if (typeof document !== 'undefined') {
+      document.documentElement.setAttribute('data-bs-theme', saved ? 'dark' : 'light');
+      document.body.classList.toggle('dark-mode', saved);
+    }
+  }
+
   // Selection states
   readonly selectedInvoice = signal<Invoice | null>(null);
   readonly selectedCustomer = signal<Customer | null>(null);
@@ -86,7 +99,11 @@ export class NavigationService {
     this.isDarkMode.update(v => {
       const next = !v;
       if (typeof document !== 'undefined') {
+        document.documentElement.setAttribute('data-bs-theme', next ? 'dark' : 'light');
         document.body.classList.toggle('dark-mode', next);
+      }
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('ar_dark_mode', String(next));
       }
       return next;
     });

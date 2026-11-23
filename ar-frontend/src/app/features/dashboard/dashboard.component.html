@@ -13,7 +13,9 @@
   <!-- 4 Executive Consolidated Metric Containers (/manager/dashboard style - Strictly 3 clean lines) -->
   <div class="metrics-summary-grid">
     <!-- KPI 1: Total Outstanding AR -->
-    <div class="metric-summary-card cursor-pointer" (click)="navigateTo('invoices')">
+    <div class="metric-summary-card cursor-pointer" role="button" tabindex="0"
+      (click)="navigateTo('invoices')" (keydown.enter)="navigateTo('invoices')" (keydown.space)="navigateTo('invoices')"
+      aria-label="Lihat daftar invoice piutang berjalan">
       <div class="metric-icon-wrap icon-blue">
         <i class="bi bi-wallet2"></i>
       </div>
@@ -27,7 +29,9 @@
     </div>
 
     <!-- KPI 2: Overdue AR Risk -->
-    <div class="metric-summary-card cursor-pointer" (click)="navigateTo('invoices')">
+    <div class="metric-summary-card cursor-pointer" role="button" tabindex="0"
+      (click)="navigateTo('invoices')" (keydown.enter)="navigateTo('invoices')" (keydown.space)="navigateTo('invoices')"
+      aria-label="Lihat daftar invoice jatuh tempo">
       <div class="metric-icon-wrap icon-rose">
         <i class="bi bi-exclamation-octagon"></i>
       </div>
@@ -41,7 +45,9 @@
     </div>
 
     <!-- KPI 3: Cash Collected This Month -->
-    <div class="metric-summary-card cursor-pointer" (click)="navigateTo('payments')">
+    <div class="metric-summary-card cursor-pointer" role="button" tabindex="0"
+      (click)="navigateTo('payments')" (keydown.enter)="navigateTo('payments')" (keydown.space)="navigateTo('payments')"
+      aria-label="Lihat riwayat penerimaan kas bulan ini">
       <div class="metric-icon-wrap icon-green">
         <i class="bi bi-cash-stack"></i>
       </div>
@@ -200,11 +206,11 @@
                 (click)="viewInvoice(inv)">
                 <td>
                   <div class="fw-bold text-dark">{{ inv.invoiceNumber }}</div>
-                  <div class="text-muted" style="font-size: 0.72rem;">Tempo: {{ inv.dueDate }}</div>
+                  <div class="text-muted" style="font-size: 0.76rem;">Tempo: {{ inv.dueDate }}</div>
                 </td>
                 <td>
                   <div class="fw-semibold text-dark">{{ inv.customerName }}</div>
-                  <div class="text-muted" *ngIf="getCustomer(inv.customerId) as cust" style="font-size: 0.72rem;">
+                  <div class="text-muted" *ngIf="getCustomer(inv.customerId) as cust" style="font-size: 0.76rem;">
                     {{ cust.contactPerson }}
                   </div>
                 </td>
@@ -244,10 +250,10 @@
                 (click)="viewCustomer(item.customer)">
                 <td>
                   <div class="fw-bold text-dark">{{ item.customer.name }}</div>
-                  <div class="text-muted" style="font-size: 0.72rem;">{{ item.customer.code }}</div>
+                  <div class="text-muted" style="font-size: 0.76rem;">{{ item.customer.code }}</div>
                 </td>
                 <td>
-                  <div class="d-flex align-items-center justify-content-between mb-1" style="font-size: 0.72rem;">
+                  <div class="d-flex align-items-center justify-content-between mb-1" style="font-size: 0.76rem;">
                     <span class="fw-semibold text-secondary">{{ item.limitUsage }}%</span>
                     <span class="text-muted">Plafon {{ item.customer.creditLimit | rupiah }}</span>
                   </div>
@@ -260,7 +266,7 @@
                 </td>
                 <td class="text-end">
                   <div class="fw-bold text-dark" style="font-size: 0.9rem;">{{ item.balance | rupiah }}</div>
-                  <div *ngIf="item.overdueCount > 0" class="text-danger fw-semibold" style="font-size: 0.7rem;">
+                  <div *ngIf="item.overdueCount > 0" class="text-danger fw-semibold" style="font-size: 0.76rem;">
                     {{ item.overdueCount }} Overdue
                   </div>
                 </td>
@@ -293,13 +299,13 @@
                 <div class="fw-bold text-dark text-truncate" style="font-size: 0.85rem;">
                   {{ p.customerName }}
                 </div>
-                <div class="text-muted mt-0.5" style="font-size: 0.74rem;">
+                <div class="text-muted mt-0.5" style="font-size: 0.76rem;">
                   {{ p.paymentNumber }} &bull; {{ p.paymentChannel }}
                 </div>
               </div>
               <div class="text-end flex-shrink-0">
                 <div class="fw-bold text-success" style="font-size: 0.92rem;">+{{ p.amount | rupiah }}</div>
-                <div class="text-muted" style="font-size: 0.72rem;">{{ p.paymentDate }}</div>
+                <div class="text-muted" style="font-size: 0.76rem;">{{ p.paymentDate }}</div>
               </div>
             </div>
 

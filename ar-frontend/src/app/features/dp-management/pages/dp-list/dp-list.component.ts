@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, inject, signal, computed, HostListener, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ArDataService } from '../../../../core/services/ar-data.service';
@@ -220,46 +220,46 @@ import { RupiahPipe } from '../../../../shared/pipes/rupiah.pipe';
     </div>
 
     <!-- Modal Catat Setoran DP -->
-    <div class="v3-modal-backdrop" *ngIf="showRecordDpModal()">
-      <div class="v3-modal">
+    <div class="v3-modal-backdrop" *ngIf="showRecordDpModal()" (click)="onBackdropClick($event, 'record')">
+      <div class="v3-modal" role="dialog" aria-modal="true" aria-labelledby="dp-record-modal-title">
         <div class="v3-modal-header">
-          <div class="fw-bold fs-5 text-dark">Penerimaan Uang Muka (DP)</div>
-          <button type="button" class="btn-close" (click)="showRecordDpModal.set(false)"></button>
+          <h4 id="dp-record-modal-title" class="fw-bold fs-5 text-dark m-0">Penerimaan Uang Muka (DP)</h4>
+          <button type="button" class="btn-close" (click)="showRecordDpModal.set(false)" aria-label="Tutup dialog setoran DP"></button>
         </div>
         <div class="v3-modal-body">
           <div class="mb-3">
-            <label class="form-label small fw-semibold">Pelanggan <span class="text-danger">*</span></label>
-            <select class="form-select" [ngModel]="dpRecordCustomerId()" (ngModelChange)="dpRecordCustomerId.set($event)">
+            <label for="dp-rec-cust" class="form-label small fw-semibold">Pelanggan <span class="text-danger">*</span></label>
+            <select id="dp-rec-cust" class="form-select" [ngModel]="dpRecordCustomerId()" (ngModelChange)="dpRecordCustomerId.set($event)">
               <option *ngFor="let c of arService.customers()" [value]="c.id">
                 {{ c.name }} (Saldo DP: {{ (c.dpBalance || 0) | rupiah }})
               </option>
             </select>
           </div>
           <div class="mb-3">
-            <label class="form-label small fw-semibold">Nominal Uang Muka <span class="text-danger">*</span></label>
-            <input type="number" class="form-control v3-mono fs-5 fw-bold" [ngModel]="dpRecordAmount()" (ngModelChange)="dpRecordAmount.set(+$event)">
+            <label for="dp-rec-amount" class="form-label small fw-semibold">Nominal Uang Muka <span class="text-danger">*</span></label>
+            <input id="dp-rec-amount" type="number" class="form-control v3-mono fs-5 fw-bold" [ngModel]="dpRecordAmount()" (ngModelChange)="dpRecordAmount.set(+$event)">
           </div>
           <div class="row g-2 mb-3">
             <div class="col-6">
-              <label class="form-label small fw-semibold">Metode Pembayaran</label>
-              <select class="form-select" [ngModel]="dpRecordMethod()" (ngModelChange)="dpRecordMethod.set($event)">
+              <label for="dp-rec-method" class="form-label small fw-semibold">Metode Pembayaran</label>
+              <select id="dp-rec-method" class="form-select" [ngModel]="dpRecordMethod()" (ngModelChange)="dpRecordMethod.set($event)">
                 <option value="bank_transfer">Transfer Bank</option>
                 <option value="cash">Tunai</option>
                 <option value="credit_card">Kartu Kredit</option>
               </select>
             </div>
             <div class="col-6">
-              <label class="form-label small fw-semibold">Bank / Channel</label>
-              <input type="text" class="form-control" [ngModel]="dpRecordChannel()" (ngModelChange)="dpRecordChannel.set($event)" placeholder="BCA / Mandiri / Kasir">
+              <label for="dp-rec-channel" class="form-label small fw-semibold">Bank / Channel</label>
+              <input id="dp-rec-channel" type="text" class="form-control" [ngModel]="dpRecordChannel()" (ngModelChange)="dpRecordChannel.set($event)" placeholder="BCA / Mandiri / Kasir">
             </div>
           </div>
           <div class="mb-3">
-            <label class="form-label small fw-semibold">No. Referensi</label>
-            <input type="text" class="form-control v3-mono" [ngModel]="dpRecordRef()" (ngModelChange)="dpRecordRef.set($event)" placeholder="Contoh: TRF-DP-883921">
+            <label for="dp-rec-ref" class="form-label small fw-semibold">No. Referensi</label>
+            <input id="dp-rec-ref" type="text" class="form-control v3-mono" [ngModel]="dpRecordRef()" (ngModelChange)="dpRecordRef.set($event)" placeholder="Contoh: TRF-DP-883921">
           </div>
           <div class="mb-3">
-            <label class="form-label small fw-semibold">Catatan</label>
-            <textarea class="form-control" rows="2" [ngModel]="dpRecordNotes()" (ngModelChange)="dpRecordNotes.set($event)"></textarea>
+            <label for="dp-rec-notes" class="form-label small fw-semibold">Catatan</label>
+            <textarea id="dp-rec-notes" class="form-control" rows="2" [ngModel]="dpRecordNotes()" (ngModelChange)="dpRecordNotes.set($event)"></textarea>
           </div>
         </div>
         <div class="v3-modal-footer">
@@ -272,19 +272,19 @@ import { RupiahPipe } from '../../../../shared/pipes/rupiah.pipe';
     </div>
 
     <!-- Modal Alokasi Potongan DP ke Invoice -->
-    <div class="v3-modal-backdrop" *ngIf="showApplyDpModal()">
-      <div class="v3-modal">
+    <div class="v3-modal-backdrop" *ngIf="showApplyDpModal()" (click)="onBackdropClick($event, 'apply')">
+      <div class="v3-modal" role="dialog" aria-modal="true" aria-labelledby="dp-apply-modal-title">
         <div class="v3-modal-header">
           <div>
-            <div class="fw-bold fs-5 text-dark">Alokasi Potongan Uang Muka (DP)</div>
+            <h4 id="dp-apply-modal-title" class="fw-bold fs-5 text-dark m-0">Alokasi Potongan Uang Muka (DP)</h4>
             <div class="text-muted small">Gunakan saldo deposit pelanggan untuk mengurangi sisa tagihan faktur</div>
           </div>
-          <button type="button" class="btn-close" (click)="showApplyDpModal.set(false)"></button>
+          <button type="button" class="btn-close" (click)="showApplyDpModal.set(false)" aria-label="Tutup dialog alokasi DP"></button>
         </div>
         <div class="v3-modal-body">
           <div class="mb-3">
-            <label class="form-label small fw-semibold">Pelanggan</label>
-            <select class="form-select" [ngModel]="dpApplyCustomerId()" (ngModelChange)="onApplyDpCustomerChange($event)">
+            <label for="dp-apply-cust" class="form-label small fw-semibold">Pelanggan</label>
+            <select id="dp-apply-cust" class="form-select" [ngModel]="dpApplyCustomerId()" (ngModelChange)="onApplyDpCustomerChange($event)">
               <option *ngFor="let c of arService.customers()" [value]="c.id">
                 {{ c.name }} (Saldo DP: {{ (c.dpBalance || 0) | rupiah }})
               </option>
@@ -295,8 +295,8 @@ import { RupiahPipe } from '../../../../shared/pipes/rupiah.pipe';
             <strong class="v3-mono fs-6">{{ (cust.dpBalance || 0) | rupiah }}</strong>
           </div>
           <div class="mb-3">
-            <label class="form-label small fw-semibold">Pilih Invoice <span class="text-danger">*</span></label>
-            <select class="form-select" [ngModel]="dpApplyInvoiceId()" (ngModelChange)="dpApplyInvoiceId.set($event)">
+            <label for="dp-apply-inv" class="form-label small fw-semibold">Pilih Invoice <span class="text-danger">*</span></label>
+            <select id="dp-apply-inv" class="form-select" [ngModel]="dpApplyInvoiceId()" (ngModelChange)="dpApplyInvoiceId.set($event)">
               <option value="" disabled>-- Pilih Invoice Tertagih --</option>
               <option *ngFor="let inv of dpApplyEligibleInvoices()" [value]="inv.id">
                 {{ inv.invoiceNumber }} &bull; Sisa: {{ inv.balanceDue | rupiah }} (Status: {{ inv.status }})
@@ -304,12 +304,12 @@ import { RupiahPipe } from '../../../../shared/pipes/rupiah.pipe';
             </select>
           </div>
           <div class="mb-3">
-            <label class="form-label small fw-semibold">Nominal Potongan DP <span class="text-danger">*</span></label>
-            <input type="number" class="form-control v3-mono fs-5 fw-bold text-primary" [ngModel]="dpApplyAmount()" (ngModelChange)="dpApplyAmount.set(+$event)">
+            <label for="dp-apply-amount" class="form-label small fw-semibold">Nominal Potongan DP <span class="text-danger">*</span></label>
+            <input id="dp-apply-amount" type="number" class="form-control v3-mono fs-5 fw-bold text-primary" [ngModel]="dpApplyAmount()" (ngModelChange)="dpApplyAmount.set(+$event)">
           </div>
           <div class="mb-3">
-            <label class="form-label small fw-semibold">Catatan</label>
-            <textarea class="form-control" rows="2" [ngModel]="dpApplyNotes()" (ngModelChange)="dpApplyNotes.set($event)"></textarea>
+            <label for="dp-apply-notes" class="form-label small fw-semibold">Catatan</label>
+            <textarea id="dp-apply-notes" class="form-control" rows="2" [ngModel]="dpApplyNotes()" (ngModelChange)="dpApplyNotes.set($event)"></textarea>
           </div>
         </div>
         <div class="v3-modal-footer">
@@ -323,7 +323,43 @@ import { RupiahPipe } from '../../../../shared/pipes/rupiah.pipe';
   `
 })
 export class DpListComponent {
+  private readonly elementRef = inject(ElementRef);
   readonly arService = inject(ArDataService);
+
+  @HostListener('document:keydown.escape')
+  onEscape() {
+    if (this.showRecordDpModal()) {
+      this.showRecordDpModal.set(false);
+    } else if (this.showApplyDpModal()) {
+      this.showApplyDpModal.set(false);
+    }
+  }
+
+  @HostListener('keydown', ['$event'])
+  onKeydown(event: KeyboardEvent) {
+    if ((!this.showRecordDpModal() && !this.showApplyDpModal()) || event.key !== 'Tab') return;
+    const focusable = this.elementRef.nativeElement.querySelectorAll(
+      '.v3-modal button:not([disabled]), .v3-modal input:not([disabled]), .v3-modal select:not([disabled]), .v3-modal textarea:not([disabled]), .v3-modal [tabindex]:not([tabindex="-1"])'
+    );
+    if (focusable.length === 0) return;
+    const first = focusable[0] as HTMLElement;
+    const last = focusable[focusable.length - 1] as HTMLElement;
+
+    if (event.shiftKey && document.activeElement === first) {
+      last.focus();
+      event.preventDefault();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      first.focus();
+      event.preventDefault();
+    }
+  }
+
+  onBackdropClick(event: MouseEvent, modalType: 'record' | 'apply') {
+    if ((event.target as HTMLElement).classList.contains('v3-modal-backdrop')) {
+      if (modalType === 'record') this.showRecordDpModal.set(false);
+      if (modalType === 'apply') this.showApplyDpModal.set(false);
+    }
+  }
 
   dpSearchQuery = signal<string>('');
   selectedDpCustomerId = signal<string | null>(null);

@@ -162,14 +162,16 @@ import { ConfirmDialogComponent, DeleteModalState } from '../../../../shared/com
               <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-search"></i></span>
               <input type="text" class="form-control form-control-sm border-start-0 ps-0"
                 placeholder="Cari invoice, pelanggan, NPWP..." [ngModel]="invoiceSearchQuery()"
-                (ngModelChange)="invoiceSearchQuery.set($event)">
+                (ngModelChange)="invoiceSearchQuery.set($event)"
+                aria-label="Cari invoice, pelanggan, atau NPWP">
             </div>
           </div>
 
           <!-- Customer Filter Dropdown -->
           <div style="min-width: 170px;">
             <select class="form-select form-select-sm" [ngModel]="invoiceCustomerFilter()"
-              (ngModelChange)="invoiceCustomerFilter.set($event)">
+              (ngModelChange)="invoiceCustomerFilter.set($event)"
+              aria-label="Filter berdasarkan nama pelanggan">
               <option value="ALL">Semua Pelanggan</option>
               <option *ngFor="let c of arService.customers()" [value]="c.id">{{ c.name }}</option>
             </select>
@@ -178,7 +180,8 @@ import { ConfirmDialogComponent, DeleteModalState } from '../../../../shared/com
           <!-- Date Range / Period Filter Dropdown -->
           <div style="min-width: 135px;">
             <select class="form-select form-select-sm" [ngModel]="invoiceDateFilter()"
-              (ngModelChange)="invoiceDateFilter.set($event)">
+              (ngModelChange)="invoiceDateFilter.set($event)"
+              aria-label="Filter periode tanggal invoice">
               <option value="ALL">Semua Periode</option>
               <option value="THIS_MONTH">Bulan Berjalan</option>
               <option value="LAST_MONTH">Bulan Lalu</option>
@@ -192,14 +195,18 @@ import { ConfirmDialogComponent, DeleteModalState } from '../../../../shared/com
             <span class="text-muted" style="font-size: 0.75rem;">Dari:</span>
             <input type="date" class="form-control form-control-sm border-0 bg-transparent p-0"
               style="font-size: 0.75rem; width: 108px; height: auto;" title="Dari tanggal (Opsional)"
+              aria-label="Tanggal awal pencarian invoice"
               [ngModel]="invoiceStartDate()" (ngModelChange)="invoiceStartDate.set($event)">
             <span class="text-muted" style="font-size: 0.75rem;">s/d</span>
             <input type="date" class="form-control form-control-sm border-0 bg-transparent p-0"
               style="font-size: 0.75rem; width: 108px; height: auto;" title="Sampai tanggal (Opsional)"
+              aria-label="Tanggal akhir pencarian invoice"
               [ngModel]="invoiceEndDate()" (ngModelChange)="invoiceEndDate.set($event)">
             <button type="button" class="btn btn-link text-muted p-0 ms-1"
               *ngIf="invoiceStartDate() || invoiceEndDate()"
-              (click)="invoiceStartDate.set(''); invoiceEndDate.set('')" title="Hapus filter rentang tanggal">
+              (click)="invoiceStartDate.set(''); invoiceEndDate.set('')"
+              title="Hapus filter rentang tanggal"
+              aria-label="Hapus filter rentang tanggal">
               <i class="bi bi-x-circle-fill text-secondary" style="font-size: 0.8rem;"></i>
             </button>
           </div>
@@ -313,25 +320,29 @@ import { ConfirmDialogComponent, DeleteModalState } from '../../../../shared/com
                 <td class="text-end">
                   <div class="d-inline-flex align-items-center gap-1">
                     <button type="button" class="btn btn-sm btn-light border py-1 px-2" style="font-size: 0.72rem;"
-                      (click)="viewInvoice(inv)" title="Lihat Rincian">
+                      (click)="viewInvoice(inv)" title="Lihat Rincian"
+                      [attr.aria-label]="'Lihat rincian faktur ' + inv.invoiceNumber">
                       Lihat
                     </button>
 
                     <button type="button" class="btn btn-sm btn-outline-success py-1 px-2" style="font-size: 0.72rem;"
                       *ngIf="inv.status === 'Draft'" [disabled]="isViewer" (click)="issueDraftInvoice(inv)"
-                      title="Terbitkan Invoice">
+                      title="Terbitkan Invoice"
+                      [attr.aria-label]="'Terbitkan draft faktur ' + inv.invoiceNumber">
                       Terbitkan
                     </button>
 
                     <button type="button" class="btn btn-sm btn-outline-danger py-1 px-2" style="font-size: 0.72rem;"
                       *ngIf="inv.status === 'Draft'" [disabled]="isViewer" (click)="requestDeleteInvoice(inv)"
-                      title="Hapus Draft Invoice">
+                      title="Hapus Draft Invoice"
+                      [attr.aria-label]="'Hapus draft faktur ' + inv.invoiceNumber">
                       Hapus
                     </button>
 
                     <button type="button" class="btn btn-sm btn-outline-danger py-1 px-2" style="font-size: 0.72rem;"
                       *ngIf="inv.status !== 'Draft' && inv.status !== 'Cancelled' && inv.amountPaid === 0" [disabled]="isViewer"
-                      (click)="openCancelInvoiceModal(inv)" title="Batalkan Invoice">
+                      (click)="openCancelInvoiceModal(inv)" title="Batalkan Invoice"
+                      [attr.aria-label]="'Batalkan faktur ' + inv.invoiceNumber">
                       Batal
                     </button>
                   </div>
