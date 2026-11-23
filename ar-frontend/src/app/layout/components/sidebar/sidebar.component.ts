@@ -15,13 +15,16 @@ import { ArDataService } from '../../../core/services/ar-data.service';
       <!-- Floating Circular Collapse Toggle Button (POS Style) -->
       <button type="button" class="sidebar-collapse-toggle d-none d-lg-flex"
         (click)="navService.toggleSidebarCollapse()"
-        [title]="navService.sidebarCollapsed() ? 'Perluas Sidebar' : 'Ciutkan Sidebar'">
+        [title]="navService.sidebarCollapsed() ? 'Perluas Sidebar' : 'Ciutkan Sidebar'"
+        [attr.aria-label]="navService.sidebarCollapsed() ? 'Perluas navigasi sidebar' : 'Ciutkan navigasi sidebar'">
         <i class="bi" [ngClass]="navService.sidebarCollapsed() ? 'bi-chevron-right' : 'bi-chevron-left'"></i>
       </button>
 
       <div class="v3-sidebar-header">
         <div class="v3-brand" (click)="navigateTo('dashboard')" role="button" tabindex="0"
-          title="PT Galesong Pratama - Sistem Piutang">
+          (keydown.enter)="navigateTo('dashboard')" (keydown.space)="navigateTo('dashboard')"
+          title="PT Galesong Pratama - Sistem Piutang"
+          aria-label="Beranda Dashboard PT Galesong Pratama">
           <img *ngIf="!navService.sidebarCollapsed()" src="asset/image3.png" alt="PT Galesong Pratama" class="v3-sidebar-logo" />
           <div *ngIf="navService.sidebarCollapsed()" class="v3-brand-mini-icon" title="Galesong AR">
             <span>AR</span>

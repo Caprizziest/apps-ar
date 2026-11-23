@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, Output, EventEmitter } from '@angular/core';
+import { Component, inject, signal, computed, Output, EventEmitter, HostListener, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NavigationService } from '../../../core/services/navigation.service';
 import { ArDataService } from '../../../core/services/ar-data.service';
@@ -11,38 +11,41 @@ import { RupiahPipe } from '../../../shared/pipes/rupiah.pipe';
   imports: [CommonModule, RupiahPipe],
   template: `
     <div class="v3-drawer-backdrop" *ngIf="navService.showActionInbox()" (click)="navService.showActionInbox.set(false)">
-      <div class="v3-drawer" (click)="$event.stopPropagation()">
+      <div class="v3-drawer" role="dialog" aria-modal="true" aria-labelledby="action-inbox-drawer-title" (click)="$event.stopPropagation()">
 
         <!-- Drawer Header -->
         <div class="v3-drawer-header">
           <div class="d-flex align-items-center gap-2">
             <div
               class="rounded-2 p-1.5 bg-danger bg-opacity-10 text-danger d-flex align-items-center justify-content-center"
-              style="width: 32px; height: 32px;">
+              style="width: 32px; height: 32px;" aria-hidden="true">
               <i class="bi bi-bell-fill fs-6"></i>
             </div>
             <div>
-              <div class="fw-bold text-dark" style="font-size: 0.95rem;">Tindak Lanjut Penagihan</div>
+              <h3 id="action-inbox-drawer-title" class="fw-bold text-dark m-0" style="font-size: 0.95rem;">Tindak Lanjut Penagihan</h3>
             </div>
           </div>
-          <button type="button" class="btn-close" (click)="navService.showActionInbox.set(false)" title="Tutup Panel"></button>
+          <button type="button" class="btn-close" (click)="navService.showActionInbox.set(false)" aria-label="Tutup panel tindak lanjut penagihan" title="Tutup Panel"></button>
         </div>
 
         <!-- Quick Filter Tabs inside Drawer -->
-        <div class="px-3 pt-2.5 pb-2 bg-white border-bottom d-flex align-items-center gap-1.5">
+        <div class="px-3 pt-2.5 pb-2 bg-white border-bottom d-flex align-items-center gap-1.5" role="group" aria-label="Filter tindak lanjut">
           <button type="button" class="btn btn-sm py-1 px-2.5 rounded-pill"
             [ngClass]="actionInboxTab() === 'all' ? 'btn-dark' : 'btn-light border text-muted'"
-            style="font-size: 0.75rem;" (click)="actionInboxTab.set('all')">
+            style="font-size: 0.75rem;" (click)="actionInboxTab.set('all')"
+            [attr.aria-pressed]="actionInboxTab() === 'all'">
             Semua ({{ priorityOverdueInvoices().length + draftInvoices().length }})
           </button>
           <button type="button" class="btn btn-sm py-1 px-2.5 rounded-pill"
             [ngClass]="actionInboxTab() === 'overdue' ? 'btn-danger' : 'btn-light border text-muted'"
-            style="font-size: 0.75rem;" (click)="actionInboxTab.set('overdue')">
+            style="font-size: 0.75rem;" (click)="actionInboxTab.set('overdue')"
+            [attr.aria-pressed]="actionInboxTab() === 'overdue'">
             Overdue ({{ priorityOverdueInvoices().length }})
           </button>
           <button type="button" class="btn btn-sm py-1 px-2.5 rounded-pill"
             [ngClass]="actionInboxTab() === 'draft' ? 'btn-secondary' : 'btn-light border text-muted'"
-            style="font-size: 0.75rem;" (click)="actionInboxTab.set('draft')">
+            style="font-size: 0.75rem;" (click)="actionInboxTab.set('draft')"
+            [attr.aria-pressed]="actionInboxTab() === 'draft'">
             Draft ({{ draftInvoices().length }})
           </button>
         </div>
@@ -177,10 +180,37 @@ import { RupiahPipe } from '../../../shared/pipes/rupiah.pipe';
   `
 })
 export class ActionInboxDrawerComponent {
+  private readonly elementRef = inject(ElementRef);
   readonly navService = inject(NavigationService);
   readonly arService = inject(ArDataService);
 
   @Output() recordPaymentForInvoice = new EventEmitter<{ customerId: string; invoiceId: string }>();
+
+  @HostListener('document:keydown.escape')
+  onEscape() {
+    if (this.navService.showActionInbox()) {
+      this.navService.showActionInbox.set(false);
+    }
+  }
+
+  @HostListener('keydown', ['$event'])
+  onKeydown(event: KeyboardEvent) {
+    if (!this.navService.showActionInbox() || event.key !== 'Tab') return;
+    const focusable = this.elementRef.nativeElement.querySelectorAll(
+      'button:not([disabled]), a[href]:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    );
+    if (focusable.length === 0) return;
+    const first = focusable[0] as HTMLElement;
+    const last = focusable[focusable.length - 1] as HTMLElement;
+
+    if (event.shiftKey && document.activeElement === first) {
+      last.focus();
+      event.preventDefault();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      first.focus();
+      event.preventDefault();
+    }
+  }
 
   actionInboxTab = signal<'all' | 'overdue' | 'draft'>('all');
 

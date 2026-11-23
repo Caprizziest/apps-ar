@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, inject, signal, computed, HostListener, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ArDataService } from '../../../core/services/ar-data.service';
@@ -108,14 +108,14 @@ import { MutasiTransactionDetail, MutasiCustomerSummary } from '../../../core/mo
     </div>
 
     <!-- Modal Detail Mutasi Piutang -->
-    <div class="v3-modal-backdrop" *ngIf="showDetailMutasiModal() && detailMutasiData() as mutasi">
-      <div class="v3-modal v3-modal-xl">
+    <div class="v3-modal-backdrop" *ngIf="showDetailMutasiModal() && detailMutasiData() as mutasi" (click)="onBackdropClick($event)">
+      <div class="v3-modal v3-modal-xl" role="dialog" aria-modal="true" aria-labelledby="detail-mutasi-modal-title">
         <div class="v3-modal-header py-2.5 px-3 border-bottom">
           <div>
-            <div class="fw-bold fs-6 text-dark">
+            <h4 id="detail-mutasi-modal-title" class="fw-bold fs-6 text-dark m-0">
               Detail Mutasi Piutang: <span class="text-primary">{{ mutasi.customerName }}</span>
               <span class="text-muted small fw-normal ms-1">[{{ mutasi.customerCode }}]</span>
-            </div>
+            </h4>
             <div class="text-secondary small" style="font-size: 0.75rem;">
               Periode: <span class="v3-mono text-dark">{{ mutasiStartDate() }}</span> s.d. <span class="v3-mono text-dark">{{ mutasiEndDate() }}</span> &bull;
               Total Piutang: <span class="v3-mono text-primary fw-semibold">{{ mutasi.totalPiutang | rupiah }}</span> &bull;
@@ -123,7 +123,7 @@ import { MutasiTransactionDetail, MutasiCustomerSummary } from '../../../core/mo
               Saldo: <span class="v3-mono fw-bold" [class.text-danger]="mutasi.saldoAkhir > 0">{{ mutasi.saldoAkhir | rupiah }}</span>
             </div>
           </div>
-          <button type="button" class="btn-close" (click)="closeDetailMutasi()"></button>
+          <button type="button" class="btn-close" (click)="closeDetailMutasi()" aria-label="Tutup dialog detail mutasi"></button>
         </div>
 
         <div class="v3-modal-body p-2">
@@ -193,7 +193,40 @@ import { MutasiTransactionDetail, MutasiCustomerSummary } from '../../../core/mo
   `
 })
 export class MutasiPiutangComponent {
+  private readonly elementRef = inject(ElementRef);
   readonly arService = inject(ArDataService);
+
+  @HostListener('document:keydown.escape')
+  onEscape() {
+    if (this.showDetailMutasiModal()) {
+      this.closeDetailMutasi();
+    }
+  }
+
+  @HostListener('keydown', ['$event'])
+  onKeydown(event: KeyboardEvent) {
+    if (!this.showDetailMutasiModal() || event.key !== 'Tab') return;
+    const focusable = this.elementRef.nativeElement.querySelectorAll(
+      '.v3-modal button:not([disabled]), .v3-modal [tabindex]:not([tabindex="-1"])'
+    );
+    if (focusable.length === 0) return;
+    const first = focusable[0] as HTMLElement;
+    const last = focusable[focusable.length - 1] as HTMLElement;
+
+    if (event.shiftKey && document.activeElement === first) {
+      last.focus();
+      event.preventDefault();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      first.focus();
+      event.preventDefault();
+    }
+  }
+
+  onBackdropClick(event: MouseEvent) {
+    if ((event.target as HTMLElement).classList.contains('v3-modal-backdrop')) {
+      this.closeDetailMutasi();
+    }
+  }
 
   mutasiStartDate = signal<string>('2026-08-01');
   mutasiEndDate = signal<string>('2026-09-30');

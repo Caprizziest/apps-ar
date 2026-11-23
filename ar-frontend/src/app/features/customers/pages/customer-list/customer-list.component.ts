@@ -61,14 +61,16 @@ import { ConfirmDialogComponent, DeleteModalState } from '../../../../shared/com
               <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-search"></i></span>
               <input type="text" class="form-control form-control-sm border-start-0 ps-0"
                 placeholder="Cari nama, NIK, NPWP, kontak..." [ngModel]="customerSearchQuery()"
-                (ngModelChange)="customerSearchQuery.set($event)">
+                (ngModelChange)="customerSearchQuery.set($event)"
+                aria-label="Cari nama, NIK, NPWP, atau kontak pelanggan">
             </div>
           </div>
 
           <!-- Balance / Credit Status Filter -->
           <div style="min-width: 175px;">
             <select class="form-select form-select-sm" [ngModel]="customerBalanceFilter()"
-              (ngModelChange)="customerBalanceFilter.set($event)">
+              (ngModelChange)="customerBalanceFilter.set($event)"
+              aria-label="Filter kondisi saldo pelanggan">
               <option value="ALL">Semua Kondisi Saldo</option>
               <option value="HAS_BALANCE">Memiliki Piutang (> 0)</option>
               <option value="NEAR_LIMIT">Mendekati Batas Kredit (≥ 70%)</option>
@@ -79,7 +81,8 @@ import { ConfirmDialogComponent, DeleteModalState } from '../../../../shared/com
           <!-- Sorting Dropdown -->
           <div style="min-width: 175px;">
             <select class="form-select form-select-sm" [ngModel]="customerSortBy()"
-              (ngModelChange)="customerSortBy.set($event)">
+              (ngModelChange)="customerSortBy.set($event)"
+              aria-label="Urutkan daftar pelanggan">
               <option value="balance_desc">Sisa Piutang: Terbesar</option>
               <option value="name_asc">Nama Pelanggan: A–Z</option>
               <option value="creditLimit_desc">Batas Plafon: Terbesar</option>
@@ -89,7 +92,8 @@ import { ConfirmDialogComponent, DeleteModalState } from '../../../../shared/com
           <!-- Reset Button -->
           <button type="button" class="btn btn-sm btn-link text-decoration-none text-danger p-0 ms-1"
             *ngIf="hasActiveCustomerFilters()" (click)="resetCustomerFilters()"
-            title="Kembalikan semua filter pelanggan">
+            title="Kembalikan semua filter pelanggan"
+            aria-label="Kembalikan semua filter pelanggan">
             <i class="bi bi-x-circle me-1"></i>Reset
           </button>
         </div>
@@ -160,19 +164,22 @@ import { ConfirmDialogComponent, DeleteModalState } from '../../../../shared/com
                 <td class="text-end">
                   <div class="d-inline-flex gap-1">
                     <button type="button" class="btn btn-sm btn-light border py-1 px-2" style="font-size: 0.72rem;"
-                      (click)="viewCustomer(cust)" title="Lihat Profil">
+                      (click)="viewCustomer(cust)" title="Lihat Profil" [attr.aria-label]="'Lihat profil ' + cust.name">
                       Profil
                     </button>
                     <button type="button" class="btn btn-sm btn-outline-primary py-1 px-2" style="font-size: 0.72rem;"
-                      [disabled]="isViewer" (click)="openEditCustomerModal(cust)" title="Ubah Data">
+                      [disabled]="isViewer" (click)="openEditCustomerModal(cust)" title="Ubah Data"
+                      [attr.aria-label]="'Ubah data pelanggan ' + cust.name">
                       Ubah
                     </button>
                     <button type="button" class="v3-btn-primary py-1 px-2" style="font-size: 0.72rem;"
-                      [disabled]="isViewer" (click)="startCreateInvoice(cust.id)" title="Buat Invoice">
+                      [disabled]="isViewer" (click)="startCreateInvoice(cust.id)" title="Buat Invoice"
+                      [attr.aria-label]="'Buat invoice baru untuk ' + cust.name">
                       Tagih
                     </button>
                     <button type="button" class="btn btn-sm btn-outline-danger py-1 px-2" style="font-size: 0.72rem;"
-                      [disabled]="isViewer" (click)="requestDeleteCustomer(cust)" title="Hapus Pelanggan">
+                      [disabled]="isViewer" (click)="requestDeleteCustomer(cust)" title="Hapus Pelanggan"
+                      [attr.aria-label]="'Hapus pelanggan ' + cust.name">
                       Hapus
                     </button>
                   </div>

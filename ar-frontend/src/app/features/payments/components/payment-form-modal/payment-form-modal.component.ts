@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, effect } from '@angular/core';
+import { Component, inject, signal, computed, effect, HostListener, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ArDataService } from '../../../../core/services/ar-data.service';
@@ -11,14 +11,14 @@ import { RupiahPipe } from '../../../../shared/pipes/rupiah.pipe';
   standalone: true,
   imports: [CommonModule, FormsModule, RupiahPipe],
   template: `
-    <div class="v3-modal-backdrop" *ngIf="navService.showPaymentModal()">
-      <div class="v3-modal v3-modal-xl">
+    <div class="v3-modal-backdrop" *ngIf="navService.showPaymentModal()" (click)="onBackdropClick($event)">
+      <div class="v3-modal v3-modal-xl" role="dialog" aria-modal="true" aria-labelledby="payment-form-modal-title">
         <!-- Modal Header -->
         <div class="v3-modal-header bg-white py-3 px-4 border-bottom">
           <div>
-            <h4 class="fw-bold mb-0 fs-5 text-dark">Pencatatan Pembayaran Masuk</h4>
+            <h4 id="payment-form-modal-title" class="fw-bold mb-0 fs-5 text-dark">Pencatatan Pembayaran Masuk</h4>
           </div>
-          <button type="button" class="btn-close" (click)="closeModal()"></button>
+          <button type="button" class="btn-close" (click)="closeModal()" aria-label="Tutup dialog pembayaran"></button>
         </div>
 
         <!-- Modal Body (2-Column Architecture) -->
@@ -30,8 +30,8 @@ import { RupiahPipe } from '../../../../shared/pipes/rupiah.pipe';
 
               <!-- 1. Pelanggan & Informasi Piutang -->
               <div>
-                <label class="form-label small fw-bold text-dark mb-1">Pelanggan <span class="text-danger">*</span></label>
-                <select class="form-select form-select-sm" [ngModel]="paymentCustomerId()"
+                <label for="pay-form-customer" class="form-label small fw-bold text-dark mb-1">Pelanggan <span class="text-danger">*</span></label>
+                <select id="pay-form-customer" class="form-select form-select-sm" [ngModel]="paymentCustomerId()"
                   (ngModelChange)="onPaymentCustomerChange($event)">
                   <option value="" disabled>-- Pilih Pelanggan --</option>
                   <option *ngFor="let c of arService.customers()" [value]="c.id">
@@ -53,12 +53,12 @@ import { RupiahPipe } from '../../../../shared/pipes/rupiah.pipe';
 
               <!-- 2. HERO AMOUNT: NOMINAL PEMBAYARAN DITERIMA -->
               <div class="p-3 bg-white border rounded shadow-sm">
-                <label class="form-label small fw-bold text-dark text-uppercase mb-1" style="letter-spacing: 0.04em;">
+                <label for="pay-form-amount" class="form-label small fw-bold text-dark text-uppercase mb-1" style="letter-spacing: 0.04em;">
                   Nominal Pembayaran <span class="text-danger">*</span>
                 </label>
                 <div class="input-group input-group-lg">
                   <span class="input-group-text bg-light fw-bold text-dark border-end-0">Rp</span>
-                  <input type="number" step="50000" class="form-control border-start-0 v3-mono fw-bold fs-4 text-success"
+                  <input id="pay-form-amount" type="number" step="50000" class="form-control border-start-0 v3-mono fw-bold fs-4 text-success"
                     placeholder="0"
                     [ngModel]="paymentAmount()" (ngModelChange)="paymentAmount.set($event)">
                 </div>
@@ -66,8 +66,8 @@ import { RupiahPipe } from '../../../../shared/pipes/rupiah.pipe';
                 <!-- Biaya Admin & Tipe Transaksi -->
                 <div class="d-flex align-items-center justify-content-between mt-2 pt-2 border-top gap-2">
                   <div class="d-flex align-items-center gap-1.5 flex-grow-1">
-                    <label class="form-label small text-muted mb-0 text-nowrap" style="font-size: 0.72rem;">Admin Bank:</label>
-                    <input type="number" min="0" step="1000" class="form-control form-control-sm v3-mono py-0.5 px-2"
+                    <label for="pay-form-admin-fee" class="form-label small text-muted mb-0 text-nowrap" style="font-size: 0.72rem;">Admin Bank:</label>
+                    <input id="pay-form-admin-fee" type="number" min="0" step="1000" class="form-control form-control-sm v3-mono py-0.5 px-2"
                       style="font-size: 0.78rem; max-width: 95px;"
                       [ngModel]="paymentAdminFee()" (ngModelChange)="paymentAdminFee.set($event)">
                   </div>
@@ -89,13 +89,13 @@ import { RupiahPipe } from '../../../../shared/pipes/rupiah.pipe';
               <!-- 3. Rincian Rekening Bank & Metode Pembayaran -->
               <div class="row g-2">
                 <div class="col-6">
-                  <label class="form-label small fw-semibold mb-1">Tanggal Bayar <span class="text-danger">*</span></label>
-                  <input type="date" class="form-control form-control-sm" [ngModel]="paymentDate()"
+                  <label for="pay-form-date" class="form-label small fw-semibold mb-1">Tanggal Bayar <span class="text-danger">*</span></label>
+                  <input id="pay-form-date" type="date" class="form-control form-control-sm" [ngModel]="paymentDate()"
                     (ngModelChange)="paymentDate.set($event)">
                 </div>
                 <div class="col-6">
-                  <label class="form-label small fw-semibold mb-1">Metode Bayar</label>
-                  <select class="form-select form-select-sm" [ngModel]="paymentMethod()"
+                  <label for="pay-form-method" class="form-label small fw-semibold mb-1">Metode Bayar</label>
+                  <select id="pay-form-method" class="form-select form-select-sm" [ngModel]="paymentMethod()"
                     (ngModelChange)="onPaymentMethodChange($event)">
                     <option value="bank_transfer">Transfer Bank</option>
                     <option value="virtual_account">Virtual Account</option>
@@ -106,8 +106,8 @@ import { RupiahPipe } from '../../../../shared/pipes/rupiah.pipe';
                   </select>
                 </div>
                 <div class="col-12">
-                  <label class="form-label small fw-semibold mb-1">Rekening Tujuan</label>
-                  <select class="form-select form-select-sm" [ngModel]="paymentBankAccountId()"
+                  <label for="pay-form-bank" class="form-label small fw-semibold mb-1">Rekening Tujuan</label>
+                  <select id="pay-form-bank" class="form-select form-select-sm" [ngModel]="paymentBankAccountId()"
                     (ngModelChange)="paymentBankAccountId.set($event)">
                     <option *ngFor="let b of arService.bankAccounts()" [value]="b.id">
                       {{ b.bankName }} &bull; {{ b.accountNumber }}
@@ -115,8 +115,8 @@ import { RupiahPipe } from '../../../../shared/pipes/rupiah.pipe';
                   </select>
                 </div>
                 <div class="col-12">
-                  <label class="form-label small fw-semibold mb-1">No. Referensi</label>
-                  <input type="text" class="form-control form-control-sm v3-mono" [ngModel]="paymentRef()"
+                  <label for="pay-form-ref" class="form-label small fw-semibold mb-1">No. Referensi</label>
+                  <input id="pay-form-ref" type="text" class="form-control form-control-sm v3-mono" [ngModel]="paymentRef()"
                     (ngModelChange)="paymentRef.set($event)" placeholder="Contoh: TRF-BCA-982103">
                 </div>
               </div>
@@ -145,7 +145,7 @@ import { RupiahPipe } from '../../../../shared/pipes/rupiah.pipe';
                       <div class="text-muted small" style="font-size: 0.68rem;">{{ paymentAttachmentSize() }}</div>
                     </div>
                   </div>
-                  <button type="button" class="btn btn-sm btn-outline-danger py-0.5 px-1.5" (click)="removePaymentAttachment()" title="Hapus file" style="font-size: 0.7rem;">
+                  <button type="button" class="btn btn-sm btn-outline-danger py-0.5 px-1.5" (click)="removePaymentAttachment()" title="Hapus file" aria-label="Hapus file lampiran" style="font-size: 0.7rem;">
                     <i class="bi bi-x"></i>
                   </button>
                 </div>
@@ -153,8 +153,8 @@ import { RupiahPipe } from '../../../../shared/pipes/rupiah.pipe';
 
               <!-- 5. Catatan Internal Kasir / AR -->
               <div>
-                <label class="form-label small fw-semibold mb-1">Catatan</label>
-                <textarea class="form-control form-control-sm" rows="1" placeholder="Catatan opsional..."
+                <label for="pay-form-notes" class="form-label small fw-semibold mb-1">Catatan</label>
+                <textarea id="pay-form-notes" class="form-control form-control-sm" rows="1" placeholder="Catatan opsional..."
                   [ngModel]="paymentNotes()" (ngModelChange)="paymentNotes.set($event)"></textarea>
               </div>
 
@@ -232,9 +232,11 @@ import { RupiahPipe } from '../../../../shared/pipes/rupiah.pipe';
                             <input type="number" min="0" [max]="item.balanceDue"
                               class="form-control form-control-sm text-end v3-mono fw-bold"
                               style="max-width: 140px; font-size: 0.85rem;"
-                              [(ngModel)]="item.allocatedAmount">
+                              [(ngModel)]="item.allocatedAmount"
+                              [attr.aria-label]="'Alokasi nominal untuk faktur ' + item.invoiceNumber">
                             <button type="button" class="btn btn-sm btn-light border py-0.5 px-1.5 text-muted"
-                              style="font-size: 0.68rem;" (click)="allocateFull(item)" title="Set Lunas Penuh">
+                              style="font-size: 0.68rem;" (click)="allocateFull(item)" title="Set Lunas Penuh"
+                              [attr.aria-label]="'Set alokasi lunas penuh faktur ' + item.invoiceNumber">
                               Max
                             </button>
                           </div>
@@ -306,8 +308,41 @@ import { RupiahPipe } from '../../../../shared/pipes/rupiah.pipe';
   `
 })
 export class PaymentFormModalComponent {
+  private readonly elementRef = inject(ElementRef);
   readonly arService = inject(ArDataService);
   readonly navService = inject(NavigationService);
+
+  @HostListener('document:keydown.escape')
+  onEscape() {
+    if (this.navService.showPaymentModal()) {
+      this.closeModal();
+    }
+  }
+
+  @HostListener('keydown', ['$event'])
+  onKeydown(event: KeyboardEvent) {
+    if (!this.navService.showPaymentModal() || event.key !== 'Tab') return;
+    const focusable = this.elementRef.nativeElement.querySelectorAll(
+      'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    );
+    if (focusable.length === 0) return;
+    const first = focusable[0] as HTMLElement;
+    const last = focusable[focusable.length - 1] as HTMLElement;
+
+    if (event.shiftKey && document.activeElement === first) {
+      last.focus();
+      event.preventDefault();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      first.focus();
+      event.preventDefault();
+    }
+  }
+
+  onBackdropClick(event: MouseEvent) {
+    if ((event.target as HTMLElement).classList.contains('v3-modal-backdrop')) {
+      this.closeModal();
+    }
+  }
 
   paymentCustomerId = signal<string>('');
   paymentAmount = signal<number>(0);

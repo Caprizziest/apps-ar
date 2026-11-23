@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, HostListener, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ArDataService } from '../../../core/services/ar-data.service';
@@ -47,11 +47,13 @@ import { ConfirmDialogComponent, DeleteModalState } from '../../../shared/compon
                 <td class="text-end">
                   <div class="d-inline-flex gap-1">
                     <button type="button" class="btn btn-sm btn-outline-primary py-1 px-2" style="font-size: 0.75rem;"
-                      [disabled]="!isAdmin" (click)="openEditBankAccountModal(bank)">
+                      [disabled]="!isAdmin" (click)="openEditBankAccountModal(bank)"
+                      [attr.aria-label]="'Ubah data rekening ' + bank.bankName + ' ' + bank.accountNumber">
                       Ubah
                     </button>
                     <button type="button" class="btn btn-sm btn-outline-danger py-1 px-2" style="font-size: 0.75rem;"
-                      [disabled]="!isAdmin" (click)="requestDeleteBankAccount(bank)">
+                      [disabled]="!isAdmin" (click)="requestDeleteBankAccount(bank)"
+                      [attr.aria-label]="'Hapus rekening ' + bank.bankName + ' ' + bank.accountNumber">
                       Hapus
                     </button>
                   </div>
@@ -64,29 +66,29 @@ import { ConfirmDialogComponent, DeleteModalState } from '../../../shared/compon
     </div>
 
     <!-- Modal Bank Account -->
-    <div class="v3-modal-backdrop" *ngIf="showBankAccountModal()">
-      <div class="v3-modal">
+    <div class="v3-modal-backdrop" *ngIf="showBankAccountModal()" (click)="onBackdropClick($event)">
+      <div class="v3-modal" role="dialog" aria-modal="true" aria-labelledby="bank-account-modal-title">
         <div class="v3-modal-header">
-          <h4 class="fw-bold mb-0 fs-5">
+          <h4 id="bank-account-modal-title" class="fw-bold mb-0 fs-5">
             {{ editingBankId() ? 'Ubah Data Rekening Bank' : 'Tambah Rekening Bank Hotel' }}
           </h4>
-          <button type="button" class="btn-close" (click)="showBankAccountModal.set(false)"></button>
+          <button type="button" class="btn-close" (click)="showBankAccountModal.set(false)" aria-label="Tutup dialog rekening bank"></button>
         </div>
         <div class="v3-modal-body">
           <div class="row g-3">
             <div class="col-12">
-              <label class="form-label small fw-semibold">Nama Bank Penerima *</label>
-              <input type="text" class="form-control form-control-sm" placeholder="Contoh: Bank Central Asia (BCA)"
+              <label for="bank-form-name" class="form-label small fw-semibold">Nama Bank Penerima <span class="text-danger">*</span></label>
+              <input id="bank-form-name" type="text" class="form-control form-control-sm" placeholder="Contoh: Bank Central Asia (BCA)"
                 [ngModel]="formBankName()" (ngModelChange)="formBankName.set($event)">
             </div>
             <div class="col-12">
-              <label class="form-label small fw-semibold">Nomor Rekening Bank *</label>
-              <input type="text" class="form-control form-control-sm v3-mono" placeholder="Contoh: 802-099-1234"
+              <label for="bank-form-num" class="form-label small fw-semibold">Nomor Rekening Bank <span class="text-danger">*</span></label>
+              <input id="bank-form-num" type="text" class="form-control form-control-sm v3-mono" placeholder="Contoh: 802-099-1234"
                 [ngModel]="formAccountNumber()" (ngModelChange)="formAccountNumber.set($event)">
             </div>
             <div class="col-12">
-              <label class="form-label small fw-semibold">Nama Pemilik Rekening *</label>
-              <input type="text" class="form-control form-control-sm" placeholder="Contoh: PT Galesong Pratama"
+              <label for="bank-form-holder" class="form-label small fw-semibold">Nama Pemilik Rekening <span class="text-danger">*</span></label>
+              <input id="bank-form-holder" type="text" class="form-control form-control-sm" placeholder="Contoh: PT Galesong Pratama"
                 [ngModel]="formAccountHolder()" (ngModelChange)="formAccountHolder.set($event)">
             </div>
             <div class="col-12">
@@ -120,6 +122,7 @@ import { ConfirmDialogComponent, DeleteModalState } from '../../../shared/compon
   `
 })
 export class BankAccountsComponent {
+  private readonly elementRef = inject(ElementRef);
   readonly arService = inject(ArDataService);
 
   showBankAccountModal = signal<boolean>(false);
@@ -131,6 +134,38 @@ export class BankAccountsComponent {
 
   showDeleteModal = signal<boolean>(false);
   deleteState = signal<DeleteModalState | null>(null);
+
+  @HostListener('document:keydown.escape')
+  onEscape() {
+    if (this.showBankAccountModal()) {
+      this.showBankAccountModal.set(false);
+    }
+  }
+
+  @HostListener('keydown', ['$event'])
+  onKeydown(event: KeyboardEvent) {
+    if (!this.showBankAccountModal() || event.key !== 'Tab') return;
+    const focusable = this.elementRef.nativeElement.querySelectorAll(
+      'button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    );
+    if (focusable.length === 0) return;
+    const first = focusable[0] as HTMLElement;
+    const last = focusable[focusable.length - 1] as HTMLElement;
+
+    if (event.shiftKey && document.activeElement === first) {
+      last.focus();
+      event.preventDefault();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      first.focus();
+      event.preventDefault();
+    }
+  }
+
+  onBackdropClick(event: MouseEvent) {
+    if ((event.target as HTMLElement).classList.contains('v3-modal-backdrop')) {
+      this.showBankAccountModal.set(false);
+    }
+  }
 
   get isAdmin(): boolean {
     return this.arService.currentUser().role === 'Admin';

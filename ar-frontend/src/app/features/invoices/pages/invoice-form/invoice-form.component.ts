@@ -34,8 +34,8 @@ import { LineItem, InstallmentItem, InvoiceStatus } from '../../../../core/model
         <!-- Form Header -->
         <div class="row g-3 mb-4">
           <div class="col-12 col-md-5">
-            <label class="form-label small fw-semibold">Pelanggan *</label>
-            <select class="form-select form-select-sm" [ngModel]="formCustomerId()"
+            <label for="inv-form-customer" class="form-label small fw-semibold">Pelanggan <span class="text-danger">*</span></label>
+            <select id="inv-form-customer" class="form-select form-select-sm" [ngModel]="formCustomerId()"
               (ngModelChange)="onCustomerSelected($event)">
               <option *ngFor="let c of arService.customers()" [value]="c.id">
                 {{ c.name }} (Termin: {{ c.dueDays }} hari &bull; NPWP: {{ c.npwp }})
@@ -44,20 +44,20 @@ import { LineItem, InstallmentItem, InvoiceStatus } from '../../../../core/model
           </div>
 
           <div class="col-6 col-md-2">
-            <label class="form-label small fw-semibold">Tanggal Invoice *</label>
-            <input type="date" class="form-control form-control-sm" [ngModel]="formIssueDate()"
+            <label for="inv-form-issue-date" class="form-label small fw-semibold">Tanggal Invoice <span class="text-danger">*</span></label>
+            <input id="inv-form-issue-date" type="date" class="form-control form-control-sm" [ngModel]="formIssueDate()"
               (ngModelChange)="formIssueDate.set($event)">
           </div>
 
           <div class="col-6 col-md-2">
-            <label class="form-label small fw-semibold">Tanggal Jatuh Tempo *</label>
-            <input type="date" class="form-control form-control-sm" [ngModel]="formDueDate()"
+            <label for="inv-form-due-date" class="form-label small fw-semibold">Tanggal Jatuh Tempo <span class="text-danger">*</span></label>
+            <input id="inv-form-due-date" type="date" class="form-control form-control-sm" [ngModel]="formDueDate()"
               (ngModelChange)="formDueDate.set($event)">
           </div>
 
           <div class="col-12 col-md-3">
-            <label class="form-label small fw-semibold">Tipe Tagihan</label>
-            <select class="form-select form-select-sm" [ngModel]="formInvoiceType()"
+            <label for="inv-form-type" class="form-label small fw-semibold">Tipe Tagihan</label>
+            <select id="inv-form-type" class="form-select form-select-sm" [ngModel]="formInvoiceType()"
               (ngModelChange)="formInvoiceType.set($event)">
               <option value="Banquet & Event Billing">Banquet & Event Billing</option>
               <option value="Room & Suites Accommodation">Room & Suites Accommodation</option>
@@ -72,12 +72,12 @@ import { LineItem, InstallmentItem, InvoiceStatus } from '../../../../core/model
         <div class="d-flex align-items-center justify-content-between mb-2">
           <label class="small fw-bold text-dark mb-0">Rincian Item</label>
           <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size: 0.75rem;"
-            (click)="addLineItem()">
+            (click)="addLineItem()" aria-label="Tambah baris item baru">
             + Tambah Baris
           </button>
         </div>
 
-        <div class="border rounded mb-3 overflow-hidden">
+        <div class="border rounded mb-3 table-responsive">
           <table class="v3-table mb-0">
             <thead>
               <tr>
@@ -93,10 +93,12 @@ import { LineItem, InstallmentItem, InvoiceStatus } from '../../../../core/model
               <tr *ngFor="let item of lineItems(); let i = index">
                 <td>
                   <input type="text" class="form-control form-control-sm"
-                    placeholder="Ketik deskripsi item..." [(ngModel)]="item.description">
+                    placeholder="Ketik deskripsi item..." [(ngModel)]="item.description"
+                    [attr.aria-label]="'Deskripsi item baris ' + (i + 1)">
                 </td>
                 <td>
-                  <select class="form-select form-select-sm" [(ngModel)]="item.itemType">
+                  <select class="form-select form-select-sm" [(ngModel)]="item.itemType"
+                    [attr.aria-label]="'Kategori item baris ' + (i + 1)">
                     <option value="Banquet">Banquet</option>
                     <option value="Room">Room</option>
                     <option value="F&B">F&B</option>
@@ -107,18 +109,21 @@ import { LineItem, InstallmentItem, InvoiceStatus } from '../../../../core/model
                 </td>
                 <td>
                   <input type="number" min="1" class="form-control form-control-sm v3-mono"
-                    [(ngModel)]="item.quantity">
+                    [(ngModel)]="item.quantity"
+                    [attr.aria-label]="'Kuantitas baris ' + (i + 1)">
                 </td>
                 <td>
                   <input type="number" min="0" step="10000" class="form-control form-control-sm v3-mono"
-                    [(ngModel)]="item.unitPrice">
+                    [(ngModel)]="item.unitPrice"
+                    [attr.aria-label]="'Harga satuan baris ' + (i + 1)">
                 </td>
                 <td class="text-end v3-mono fw-semibold">
                   {{ ((item.quantity || 0) * (item.unitPrice || 0)) | rupiah }}
                 </td>
                 <td class="text-center">
                   <button type="button" class="btn btn-sm text-danger p-0 fw-bold fs-5" (click)="removeLineItem(i)"
-                    *ngIf="lineItems().length > 1" title="Hapus baris ini">
+                    *ngIf="lineItems().length > 1" title="Hapus baris ini"
+                    [attr.aria-label]="'Hapus item baris ' + (i + 1)">
                     &times;
                   </button>
                 </td>
@@ -130,8 +135,8 @@ import { LineItem, InstallmentItem, InvoiceStatus } from '../../../../core/model
         <!-- Bottom Totals & Notes -->
         <div class="row g-4 border-top pt-3">
           <div class="col-12 col-md-7">
-            <label class="form-label small fw-semibold">Catatan</label>
-            <textarea class="form-control form-control-sm" rows="4"
+            <label for="inv-form-notes" class="form-label small fw-semibold">Catatan</label>
+            <textarea id="inv-form-notes" class="form-control form-control-sm" rows="4"
               placeholder="Instruksi transfer pembayaran, no referensi pesanan hotel..."
               [ngModel]="formNotes()" (ngModelChange)="formNotes.set($event)"></textarea>
           </div>
@@ -154,10 +159,10 @@ import { LineItem, InstallmentItem, InvoiceStatus } from '../../../../core/model
               </div>
 
               <div class="d-flex justify-content-between align-items-center text-muted small">
-                <span>Potongan DP</span>
-                <input type="number" min="0" step="100000" style="width: 140px;"
+                <label for="inv-form-dp" class="mb-0">Potongan DP</label>
+                <input id="inv-form-dp" type="number" min="0" step="100000" style="width: 140px;"
                   class="form-control form-control-sm text-end v3-mono py-0" [ngModel]="dpDeduction()"
-                  (ngModelChange)="dpDeduction.set(+$event)">
+                  (ngModelChange)="dpDeduction.set(+$event)" aria-label="Nominal potongan uang muka DP">
               </div>
 
               <div class="d-flex justify-content-between fw-bold text-dark pt-2 border-top fs-5">

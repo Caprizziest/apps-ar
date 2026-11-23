@@ -60,16 +60,19 @@ import { Customer, Invoice, Payment } from '../../../../core/models/ar.models';
       </div>
 
       <!-- Sub Tabs -->
-      <div class="v3-tabs-bar">
+      <div class="v3-tabs-bar" role="tablist" aria-label="Tab navigasi detail pelanggan">
         <button type="button" class="v3-tab-btn" [class.active]="activeTab() === 'invoices'"
+          role="tab" [attr.aria-selected]="activeTab() === 'invoices'"
           (click)="activeTab.set('invoices')">
           Riwayat Invoice ({{ customerInvoices().length }})
         </button>
         <button type="button" class="v3-tab-btn" [class.active]="activeTab() === 'payments'"
+          role="tab" [attr.aria-selected]="activeTab() === 'payments'"
           (click)="activeTab.set('payments')">
           Riwayat Pembayaran ({{ customerPayments().length }})
         </button>
         <button type="button" class="v3-tab-btn" [class.active]="activeTab() === 'dp'"
+          role="tab" [attr.aria-selected]="activeTab() === 'dp'"
           (click)="activeTab.set('dp')">
           Uang Muka / DP (Saldo: {{ (cust.dpBalance || 0) | rupiah }})
         </button>

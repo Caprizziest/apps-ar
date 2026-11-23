@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, inject, signal, computed, HostListener, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ArDataService } from '../../../../core/services/ar-data.service';
@@ -330,14 +330,14 @@ import { Payment } from '../../../../core/models/ar.models';
     </div>
 
     <!-- Income Audit Modal -->
-    <div class="v3-modal-backdrop" *ngIf="showIncomeAuditModal() && auditSelectedPayment() as pay">
-      <div class="v3-modal">
+    <div class="v3-modal-backdrop" *ngIf="showIncomeAuditModal() && auditSelectedPayment() as pay" (click)="onBackdropClick($event)">
+      <div class="v3-modal" role="dialog" aria-modal="true" aria-labelledby="income-audit-modal-title">
         <div class="v3-modal-header">
           <div>
-            <div class="fw-bold fs-5 text-dark">Verifikasi Income Audit</div>
+            <h4 id="income-audit-modal-title" class="fw-bold fs-5 text-dark m-0">Verifikasi Income Audit</h4>
             <div class="text-muted small">Pencocokan fisik slip setor / mutasi bank</div>
           </div>
-          <button type="button" class="btn-close" (click)="showIncomeAuditModal.set(false)"></button>
+          <button type="button" class="btn-close" (click)="showIncomeAuditModal.set(false)" aria-label="Tutup dialog verifikasi income audit"></button>
         </div>
 
         <div class="v3-modal-body">
@@ -374,8 +374,8 @@ import { Payment } from '../../../../core/models/ar.models';
           </div>
 
           <div class="mb-3">
-            <label class="form-label small fw-semibold">Catatan</label>
-            <textarea class="form-control" rows="3" [ngModel]="auditNotes()" (ngModelChange)="auditNotes.set($event)"
+            <label for="income-audit-notes" class="form-label small fw-semibold">Catatan</label>
+            <textarea id="income-audit-notes" class="form-control" rows="3" [ngModel]="auditNotes()" (ngModelChange)="auditNotes.set($event)"
               placeholder="Catatan hasil verifikasi (opsional)..."></textarea>
           </div>
         </div>
@@ -391,7 +391,40 @@ import { Payment } from '../../../../core/models/ar.models';
   `
 })
 export class IncomeAuditListComponent {
+  private readonly elementRef = inject(ElementRef);
   readonly arService = inject(ArDataService);
+
+  @HostListener('document:keydown.escape')
+  onEscape() {
+    if (this.showIncomeAuditModal()) {
+      this.showIncomeAuditModal.set(false);
+    }
+  }
+
+  @HostListener('keydown', ['$event'])
+  onKeydown(event: KeyboardEvent) {
+    if (!this.showIncomeAuditModal() || event.key !== 'Tab') return;
+    const focusable = this.elementRef.nativeElement.querySelectorAll(
+      '.v3-modal button:not([disabled]), .v3-modal textarea:not([disabled]), .v3-modal [tabindex]:not([tabindex="-1"])'
+    );
+    if (focusable.length === 0) return;
+    const first = focusable[0] as HTMLElement;
+    const last = focusable[focusable.length - 1] as HTMLElement;
+
+    if (event.shiftKey && document.activeElement === first) {
+      last.focus();
+      event.preventDefault();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      first.focus();
+      event.preventDefault();
+    }
+  }
+
+  onBackdropClick(event: MouseEvent) {
+    if ((event.target as HTMLElement).classList.contains('v3-modal-backdrop')) {
+      this.showIncomeAuditModal.set(false);
+    }
+  }
 
   paymentSearchQuery = signal<string>('');
   incomeAuditBankFilter = signal<string>('ALL');
