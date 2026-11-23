@@ -24,12 +24,12 @@ import { InvoiceStatus } from '../../../core/models/ar.models';
       letter-spacing: -0.01em;
       white-space: nowrap;
     }
-    .v3-badge-draft { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
-    .v3-badge-issued { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
-    .v3-badge-partial { background: #fefce8; color: #a16207; border: 1px solid #fef08a; }
-    .v3-badge-paid { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
-    .v3-badge-overdue { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
-    .v3-badge-cancelled { background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; }
+    .v3-badge-draft { background: var(--badge-draft-bg, #f1f5f9); color: var(--badge-draft-color, #475569); border: 1px solid var(--badge-draft-border, #cbd5e1); }
+    .v3-badge-issued { background: var(--badge-issued-bg, #eff6ff); color: var(--badge-issued-color, #1d4ed8); border: 1px solid var(--badge-issued-border, #bfdbfe); }
+    .v3-badge-partial { background: var(--badge-partial-bg, #fffbeb); color: var(--badge-partial-color, #b45309); border: 1px solid var(--badge-partial-border, #fde68a); }
+    .v3-badge-paid { background: var(--badge-paid-bg, #ecfdf5); color: var(--badge-paid-color, #047857); border: 1px solid var(--badge-paid-border, #a7f3d0); }
+    .v3-badge-overdue { background: var(--badge-overdue-bg, #fef2f2); color: var(--badge-overdue-color, #b91c1c); border: 1px solid var(--badge-overdue-border, #fecaca); }
+    .v3-badge-cancelled { background: var(--badge-cancelled-bg, #f8fafc); color: var(--badge-cancelled-color, #475569); border: 1px solid var(--badge-cancelled-border, #cbd5e1); }
   `]
 })
 export class StatusBadgeComponent {

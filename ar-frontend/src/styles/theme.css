@@ -840,39 +840,39 @@
 }
 
 .v3-badge-draft {
-  background-color: #f1f5f9;
-  color: #475569;
-  border: 1px solid #cbd5e1;
+  background-color: var(--badge-draft-bg, #f1f5f9);
+  color: var(--badge-draft-color, #475569);
+  border: 1px solid var(--badge-draft-border, #cbd5e1);
 }
 
 .v3-badge-issued {
-  background-color: #eff6ff;
-  color: #1d4ed8;
-  border: 1px solid #bfdbfe;
+  background-color: var(--badge-issued-bg, #eff6ff);
+  color: var(--badge-issued-color, #1d4ed8);
+  border: 1px solid var(--badge-issued-border, #bfdbfe);
 }
 
 .v3-badge-partial {
-  background-color: #fffbeb;
-  color: #b45309;
-  border: 1px solid #fde68a;
+  background-color: var(--badge-partial-bg, #fffbeb);
+  color: var(--badge-partial-color, #b45309);
+  border: 1px solid var(--badge-partial-border, #fde68a);
 }
 
 .v3-badge-paid {
-  background-color: #ecfdf5;
-  color: #047857;
-  border: 1px solid #a7f3d0;
+  background-color: var(--badge-paid-bg, #ecfdf5);
+  color: var(--badge-paid-color, #047857);
+  border: 1px solid var(--badge-paid-border, #a7f3d0);
 }
 
 .v3-badge-overdue {
-  background-color: #fef2f2;
-  color: #b91c1c;
-  border: 1px solid #fecaca;
+  background-color: var(--badge-overdue-bg, #fef2f2);
+  color: var(--badge-overdue-color, #b91c1c);
+  border: 1px solid var(--badge-overdue-border, #fecaca);
 }
 
 .v3-badge-cancelled {
-  background-color: #1e293b;
-  color: #f8fafc;
-  border: 1px solid #0f172a;
+  background-color: var(--badge-cancelled-bg, #f8fafc);
+  color: var(--badge-cancelled-color, #475569);
+  border: 1px solid var(--badge-cancelled-border, #cbd5e1);
 }
 
 /* Filter Tabs & Action Pills (Upgraded to POS Capsule Filter Style) */
@@ -1788,7 +1788,7 @@
 
 .pms-status-pill.warning {
   background: rgba(245, 158, 11, 0.14);
-  color: #d97706;
+  color: #92400e;
 }
 
 .status-indicator-dot {
@@ -2313,6 +2313,18 @@ body.dark-mode .input-group-text {
   background-color: #0d1724 !important;
   border-color: #1e3a5f !important;
   color: #f1f5f9 !important;
+}
+
+body.dark-mode .pms-status-pill.warning,
+[data-bs-theme="dark"] .pms-status-pill.warning {
+  background: rgba(245, 158, 11, 0.2) !important;
+  color: #fde047 !important;
+}
+
+body.dark-mode .pms-status-pill.success,
+[data-bs-theme="dark"] .pms-status-pill.success {
+  background: rgba(16, 185, 129, 0.2) !important;
+  color: #6ee7b7 !important;
 }
 
 @media (max-width: 992px) {

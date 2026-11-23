@@ -30,9 +30,35 @@
   --bg-app: #F5F6FA;
   --text-main: #0f172a;
   --text-muted: #475569;
+
+  /* Status Badge Semantic Tokens (Light Mode - WCAG AA Compliant) */
+  --badge-draft-bg: #f1f5f9;
+  --badge-draft-color: #475569;
+  --badge-draft-border: #cbd5e1;
+
+  --badge-issued-bg: #eff6ff;
+  --badge-issued-color: #1d4ed8;
+  --badge-issued-border: #bfdbfe;
+
+  --badge-partial-bg: #fffbeb;
+  --badge-partial-color: #b45309;
+  --badge-partial-border: #fde68a;
+
+  --badge-paid-bg: #ecfdf5;
+  --badge-paid-color: #047857;
+  --badge-paid-border: #a7f3d0;
+
+  --badge-overdue-bg: #fef2f2;
+  --badge-overdue-color: #b91c1c;
+  --badge-overdue-border: #fecaca;
+
+  --badge-cancelled-bg: #f8fafc;
+  --badge-cancelled-color: #475569;
+  --badge-cancelled-border: #cbd5e1;
 }
 
-body.dark-mode {
+body.dark-mode,
+[data-bs-theme="dark"] {
   --primary-color: #0d1724;
   --secondary-color: #18283d;
   --light-text: #ffffff;
@@ -47,6 +73,35 @@ body.dark-mode {
   --bg-app: #0a111a;
   --text-main: #f1f5f9;
   --text-muted: #94a3b8;
+
+  /* Status Badge Semantic Tokens (Dark Mode - Translucent Tinted Badges) */
+  --badge-draft-bg: rgba(148, 163, 184, 0.15);
+  --badge-draft-color: #cbd5e1;
+  --badge-draft-border: rgba(148, 163, 184, 0.3);
+
+  --badge-issued-bg: rgba(59, 130, 246, 0.15);
+  --badge-issued-color: #93c5fd;
+  --badge-issued-border: rgba(59, 130, 246, 0.35);
+
+  --badge-partial-bg: rgba(245, 158, 11, 0.15);
+  --badge-partial-color: #fde047;
+  --badge-partial-border: rgba(245, 158, 11, 0.35);
+
+  --badge-paid-bg: rgba(16, 185, 129, 0.15);
+  --badge-paid-color: #6ee7b7;
+  --badge-paid-border: rgba(16, 185, 129, 0.35);
+
+  --badge-overdue-bg: rgba(239, 68, 68, 0.15);
+  --badge-overdue-color: #fca5a5;
+  --badge-overdue-border: rgba(239, 68, 68, 0.35);
+
+  --badge-cancelled-bg: rgba(71, 85, 105, 0.25);
+  --badge-cancelled-color: #94a3b8;
+  --badge-cancelled-border: rgba(71, 85, 105, 0.4);
+}
+
+body.dark-mode,
+body[data-bs-theme="dark"] {
   background-color: var(--bg-color) !important;
   color: var(--dark-text) !important;
 }
@@ -69,20 +124,50 @@ body {
 .text-muted {
   color: #475569 !important;
 }
-body.dark-mode .text-muted {
+body.dark-mode .text-muted,
+[data-bs-theme="dark"] .text-muted {
   color: #94a3b8 !important;
 }
 .text-danger {
   color: #b91c1c !important;
 }
-body.dark-mode .text-danger {
+body.dark-mode .text-danger,
+[data-bs-theme="dark"] .text-danger {
   color: #f87171 !important;
 }
 .text-success {
   color: #047857 !important;
 }
-body.dark-mode .text-success {
+body.dark-mode .text-success,
+[data-bs-theme="dark"] .text-success {
   color: #34d399 !important;
+}
+
+/* High-Contrast Warning Text & Alert Tokens (WCAG AA >= 4.5:1 on light, >7:1 on dark) */
+.text-warning {
+  color: #b45309 !important; /* Amber-700, 4.7:1 on white surfaces */
+}
+.text-warning-emphasis {
+  color: #92400e !important; /* Amber-800, 6.2:1 on white surfaces */
+}
+.alert-warning {
+  background-color: #fffbeb !important;
+  border-color: #fde68a !important;
+  color: #92400e !important;
+}
+body.dark-mode .text-warning,
+[data-bs-theme="dark"] .text-warning {
+  color: #fbbf24 !important; /* Amber-400 */
+}
+body.dark-mode .text-warning-emphasis,
+[data-bs-theme="dark"] .text-warning-emphasis {
+  color: #fcd34d !important; /* Amber-300 */
+}
+body.dark-mode .alert-warning,
+[data-bs-theme="dark"] .alert-warning {
+  background-color: rgba(245, 158, 11, 0.15) !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+  color: #fde047 !important;
 }
 
 /* Fractional Spacing Utilities (Tailwind-like classes for Bootstrap) */
