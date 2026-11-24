@@ -59,7 +59,9 @@ class ArTransformer
 
     public static function invoice(Invoice $invoice): array
     {
-        $invoice->loadMissing(['customer', 'details', 'installments', 'createdBy']);
+        $invoice->loadMissing(['customer', 'details', 'installments', 'penalty', 'createdBy']);
+
+        $penalty = $invoice->penalty;
 
         $data = [
             'id' => (string) $invoice->id,
@@ -110,6 +112,18 @@ class ArTransformer
             'hasRollover' => (bool) $invoice->has_rollover,
             'rolledOverAmount' => (float) $invoice->rolled_over_amount,
             'rolledOverFrom' => $invoice->rolled_over_from,
+            'penalty' => $penalty ? [
+                'penaltyAmount' => (float) $penalty->penalty_amount,
+                'paidDate' => $penalty->paid_date ? $penalty->paid_date->format('Y-m-d') : null,
+                'paymentJournalNumber' => $penalty->payment_journal_number,
+                'paymentNotes' => $penalty->payment_notes,
+                'paidAmount' => (float) $penalty->paid_amount,
+                'waivedDate' => $penalty->waived_date ? $penalty->waived_date->format('Y-m-d') : null,
+                'waiverMemoNumber' => $penalty->waiver_memo_number,
+                'waiverNotes' => $penalty->waiver_notes,
+                'waivedAmount' => (float) $penalty->waived_amount,
+                'balanceDue' => (float) $penalty->balance_due,
+            ] : null,
         ];
 
         if ($invoice->status === 'Cancelled') {

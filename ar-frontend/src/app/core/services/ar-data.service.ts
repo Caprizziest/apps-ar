@@ -2551,11 +2551,16 @@ export class ArDataService {
       const asOfTime = new Date(this.today).getTime();
       const diffDays = Math.max(0, Math.floor((asOfTime - dueTime) / (1000 * 60 * 60 * 24)));
 
-      // Denda simulation for overdue invoice
+      // Denda calculation (uses penalty record if present, or default 50.000 on overdue invoice)
       const hasDenda = inv.status === 'Overdue' || (inv.timesOverdue && inv.timesOverdue > 0);
-      const nominalDenda = hasDenda ? 50000 : 0;
+      const pen = inv.penalty;
+      const nominalDenda = pen ? pen.penaltyAmount : (hasDenda ? 50000 : 0);
+      const paidDenda = pen ? pen.paidAmount : 0;
+      const waivedDenda = pen ? pen.waivedAmount : 0;
+      const saldoDenda = pen ? pen.balanceDue : Math.max(0, nominalDenda - paidDenda - waivedDenda);
 
       rows.push({
+        invoiceId: inv.id,
         // Penagihan Piutang (Debet)
         tglTerbit: inv.issueDate,
         noInvoice: inv.invoiceNumber,
@@ -2575,19 +2580,163 @@ export class ArDataService {
 
         // Denda (Penalti & Penghapusan)
         nominalDenda: nominalDenda,
-        tglBayarDenda: '-',
-        noBuktiJurnalDenda: '-',
-        keteranganDenda: '-',
-        nominalBayarDenda: 0,
-        tglHapusDenda: '-',
-        memoHapusDenda: '-',
-        keteranganHapusDenda: '-',
-        nominalHapusDenda: 0,
-        saldoDenda: nominalDenda
+        tglBayarDenda: pen?.paidDate || '-',
+        noBuktiJurnalDenda: pen?.paymentJournalNumber || '-',
+        keteranganDenda: pen?.paymentNotes || '-',
+        nominalBayarDenda: paidDenda,
+        tglHapusDenda: pen?.waivedDate || '-',
+        memoHapusDenda: pen?.waiverMemoNumber || '-',
+        keteranganHapusDenda: pen?.waiverNotes || '-',
+        nominalHapusDenda: waivedDenda,
+        saldoDenda: saldoDenda
       });
     }
 
     return rows;
+  }
+
+  payInvoicePenalty(payload: {
+    invoiceId: string;
+    paidAmount: number;
+    paidDate?: string;
+    paymentJournalNumber?: string;
+    paymentNotes?: string;
+  }): { success: boolean; message: string } {
+    const inv = this.invoices().find(i => i.id === payload.invoiceId);
+    if (!inv) return { success: false, message: 'Invoice tidak ditemukan.' };
+    if (payload.paidAmount <= 0) return { success: false, message: 'Nominal pembayaran denda harus lebih dari 0.' };
+
+    const paidDate = payload.paidDate || this.today;
+    const journalNumber = payload.paymentJournalNumber || `BD${paidDate.replace(/-/g, '').substring(2)}${Math.floor(100 + Math.random() * 900)}`;
+    const notes = payload.paymentNotes || `Pelunasan denda faktur ${inv.invoiceNumber}`;
+
+    this.invoices.update(list =>
+      list.map(i => {
+        if (i.id === payload.invoiceId) {
+          const prev = i.penalty;
+          const basePenalty = prev ? prev.penaltyAmount : 50000;
+          const prevPaid = prev ? prev.paidAmount : 0;
+          const prevWaived = prev ? prev.waivedAmount : 0;
+          const newPaid = Math.min(basePenalty - prevWaived, prevPaid + payload.paidAmount);
+          const newBalance = Math.max(0, basePenalty - newPaid - prevWaived);
+
+          return {
+            ...i,
+            penalty: {
+              penaltyAmount: basePenalty,
+              paidDate,
+              paymentJournalNumber: journalNumber,
+              paymentNotes: notes,
+              paidAmount: newPaid,
+              waivedDate: prev?.waivedDate || null,
+              waiverMemoNumber: prev?.waiverMemoNumber || null,
+              waiverNotes: prev?.waiverNotes || null,
+              waivedAmount: prevWaived,
+              balanceDue: newBalance
+            }
+          };
+        }
+        return i;
+      })
+    );
+
+    this.addActivityLog({
+      type: 'payment_recorded',
+      description: `Pembayaran Denda sebesar Rp ${payload.paidAmount.toLocaleString('id-ID')} dicatat untuk invoice ${inv.invoiceNumber} (Jurnal: ${journalNumber})`,
+      amount: payload.paidAmount,
+      referenceId: inv.invoiceNumber,
+      badgeType: 'success'
+    });
+
+    if (this.http && this.isBackendConnected()) {
+      this.http.post<{ invoice: Invoice }>(`${this.apiUrl}/invoices/${payload.invoiceId}/penalty/pay`, {
+        paidAmount: payload.paidAmount,
+        paidDate,
+        paymentJournalNumber: journalNumber,
+        paymentNotes: notes
+      }, { headers: this.headers }).subscribe({
+        next: (res) => {
+          if (res?.invoice) {
+            this.invoices.update(list => list.map(i => (i.id === payload.invoiceId ? res.invoice : i)));
+          }
+        },
+        error: () => {}
+      });
+    }
+
+    return { success: true, message: `Pembayaran denda Rp ${payload.paidAmount.toLocaleString('id-ID')} berhasil dicatat!` };
+  }
+
+  waiveInvoicePenalty(payload: {
+    invoiceId: string;
+    waivedAmount: number;
+    waivedDate?: string;
+    waiverMemoNumber?: string;
+    waiverNotes?: string;
+  }): { success: boolean; message: string } {
+    const inv = this.invoices().find(i => i.id === payload.invoiceId);
+    if (!inv) return { success: false, message: 'Invoice tidak ditemukan.' };
+    if (payload.waivedAmount <= 0) return { success: false, message: 'Nominal penghapusan denda harus lebih dari 0.' };
+
+    const waivedDate = payload.waivedDate || this.today;
+    const memoNumber = payload.waiverMemoNumber || `MEMO/FNC/${waivedDate.replace(/-/g, '').substring(2)}/${Math.floor(10 + Math.random() * 89)}`;
+    const notes = payload.waiverNotes || `Penghapusan denda faktur ${inv.invoiceNumber}`;
+
+    this.invoices.update(list =>
+      list.map(i => {
+        if (i.id === payload.invoiceId) {
+          const prev = i.penalty;
+          const basePenalty = prev ? prev.penaltyAmount : 50000;
+          const prevPaid = prev ? prev.paidAmount : 0;
+          const prevWaived = prev ? prev.waivedAmount : 0;
+          const newWaived = Math.min(basePenalty - prevPaid, prevWaived + payload.waivedAmount);
+          const newBalance = Math.max(0, basePenalty - prevPaid - newWaived);
+
+          return {
+            ...i,
+            penalty: {
+              penaltyAmount: basePenalty,
+              paidDate: prev?.paidDate || null,
+              paymentJournalNumber: prev?.paymentJournalNumber || null,
+              paymentNotes: prev?.paymentNotes || null,
+              paidAmount: prevPaid,
+              waivedDate,
+              waiverMemoNumber: memoNumber,
+              waiverNotes: notes,
+              waivedAmount: newWaived,
+              balanceDue: newBalance
+            }
+          };
+        }
+        return i;
+      })
+    );
+
+    this.addActivityLog({
+      type: 'status_changed',
+      description: `Penghapusan Denda sebesar Rp ${payload.waivedAmount.toLocaleString('id-ID')} disetujui untuk invoice ${inv.invoiceNumber} (Memo: ${memoNumber})`,
+      amount: payload.waivedAmount,
+      referenceId: inv.invoiceNumber,
+      badgeType: 'warning'
+    });
+
+    if (this.http && this.isBackendConnected()) {
+      this.http.post<{ invoice: Invoice }>(`${this.apiUrl}/invoices/${payload.invoiceId}/penalty/waive`, {
+        waivedAmount: payload.waivedAmount,
+        waivedDate,
+        waiverMemoNumber: memoNumber,
+        waiverNotes: notes
+      }, { headers: this.headers }).subscribe({
+        next: (res) => {
+          if (res?.invoice) {
+            this.invoices.update(list => list.map(i => (i.id === payload.invoiceId ? res.invoice : i)));
+          }
+        },
+        error: () => {}
+      });
+    }
+
+    return { success: true, message: `Penghapusan denda Rp ${payload.waivedAmount.toLocaleString('id-ID')} berhasil diterapkan!` };
   }
 
   // ==========================================

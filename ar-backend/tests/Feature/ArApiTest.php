@@ -258,4 +258,33 @@ class ArApiTest extends TestCase
             ->assertStatus(200)
             ->assertJsonCount(2);
     }
+
+    public function test_invoice_penalty_payment_and_waiver_endpoints(): void
+    {
+        $overdueInv = Invoice::where('invoice_number', '008/INV/SGP-FNC/09-2026')->firstOrFail();
+
+        // 1. Pay Rp 20,000 of the Rp 50,000 penalty
+        $payRes = $this->postJson("/api/invoices/{$overdueInv->id}/penalty/pay", [
+            'paidAmount' => 20000,
+            'paidDate' => '2026-09-16',
+            'paymentJournalNumber' => 'BD260916901',
+            'paymentNotes' => 'Bayar sebagian denda',
+        ]);
+
+        $payRes->assertStatus(200)
+            ->assertJsonPath('invoice.penalty.paidAmount', 20000)
+            ->assertJsonPath('invoice.penalty.balanceDue', 30000);
+
+        // 2. Waive remaining Rp 30,000 of the penalty
+        $waiveRes = $this->postJson("/api/invoices/{$overdueInv->id}/penalty/waive", [
+            'waivedAmount' => 30000,
+            'waivedDate' => '2026-09-16',
+            'waiverMemoNumber' => 'MEMO/FNC/260916/01',
+            'waiverNotes' => 'Dispensasi denda manajemen',
+        ]);
+
+        $waiveRes->assertStatus(200)
+            ->assertJsonPath('invoice.penalty.waivedAmount', 30000)
+            ->assertJsonPath('invoice.penalty.balanceDue', 0);
+    }
 }

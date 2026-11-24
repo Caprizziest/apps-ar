@@ -7,6 +7,7 @@ use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\InvoiceDetail;
 use App\Models\InvoiceInstallment;
+use App\Models\InvoicePenalty;
 use App\Support\ArService;
 use App\Support\ArTransformer;
 use Illuminate\Http\JsonResponse;
@@ -451,6 +452,118 @@ class InvoiceController extends Controller
             'success' => true,
             'overdueFound' => $overdueFound,
             'activityLog' => $log ? ArTransformer::activityLog($log) : null,
+        ]);
+    }
+
+    public function payPenalty(Request $request, string $id): JsonResponse
+    {
+        $invoice = Invoice::with(['customer', 'penalty'])->find($id);
+        if (!$invoice) {
+            return response()->json(['success' => false, 'message' => 'Invoice tidak ditemukan.'], 404);
+        }
+
+        $paidAmount = (float) $request->input('paidAmount', 0);
+        if ($paidAmount <= 0) {
+            return response()->json(['success' => false, 'message' => 'Nominal pembayaran denda harus lebih dari 0.'], 422);
+        }
+
+        $paidDate = $request->input('paidDate', ArService::TODAY);
+        $journalNumber = $request->input('paymentJournalNumber')
+            ?: ('BD' . substr(str_replace('-', '', $paidDate), 2) . random_int(100, 999));
+        $notes = $request->input('paymentNotes') ?: "Pelunasan denda faktur {$invoice->invoice_number}";
+
+        $penalty = $invoice->penalty;
+        $basePenalty = $penalty ? (float) $penalty->penalty_amount : 50000.0;
+        $prevPaid = $penalty ? (float) $penalty->paid_amount : 0.0;
+        $prevWaived = $penalty ? (float) $penalty->waived_amount : 0.0;
+
+        $newPaidTotal = min($basePenalty - $prevWaived, $prevPaid + $paidAmount);
+        $newBalance = max(0, $basePenalty - $newPaidTotal - $prevWaived);
+
+        $penalty = InvoicePenalty::updateOrCreate(
+            ['invoice_id' => $invoice->id],
+            [
+                'penalty_amount' => $basePenalty,
+                'paid_date' => $paidDate,
+                'payment_journal_number' => $journalNumber,
+                'payment_notes' => $notes,
+                'paid_amount' => $newPaidTotal,
+                'balance_due' => $newBalance,
+            ]
+        );
+
+        $formattedAmount = number_format($paidAmount, 0, ',', '.');
+        $log = ArService::logActivity([
+            'type' => 'payment_recorded',
+            'description' => "Pembayaran Denda sebesar Rp {$formattedAmount} dicatat untuk invoice {$invoice->invoice_number} (Jurnal: {$journalNumber})",
+            'amount' => $paidAmount,
+            'reference_id' => $invoice->invoice_number,
+            'badge_type' => 'success',
+        ], $request);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Pembayaran denda Rp {$formattedAmount} untuk {$invoice->invoice_number} berhasil dicatat!",
+            'invoice' => ArTransformer::invoice($invoice->fresh(['customer', 'details', 'installments', 'penalty', 'createdBy'])),
+            'activityLog' => ArTransformer::activityLog($log),
+        ]);
+    }
+
+    public function waivePenalty(Request $request, string $id): JsonResponse
+    {
+        $invoice = Invoice::with(['customer', 'penalty'])->find($id);
+        if (!$invoice) {
+            return response()->json(['success' => false, 'message' => 'Invoice tidak ditemukan.'], 404);
+        }
+
+        $waivedAmount = (float) $request->input('waivedAmount', 0);
+        if ($waivedAmount <= 0) {
+            return response()->json(['success' => false, 'message' => 'Nominal penghapusan denda harus lebih dari 0.'], 422);
+        }
+
+        $waivedDate = $request->input('waivedDate', ArService::TODAY);
+        $memoNumber = trim((string) $request->input('waiverMemoNumber', ''));
+        if ($memoNumber === '') {
+            $memoNumber = 'MEMO/FNC/' . substr(str_replace('-', '', $waivedDate), 2) . '/' . random_int(10, 99);
+        }
+        $notes = $request->input('waiverNotes') ?: "Penghapusan denda faktur {$invoice->invoice_number}";
+        $user = ArService::resolveActiveUser($request);
+
+        $penalty = $invoice->penalty;
+        $basePenalty = $penalty ? (float) $penalty->penalty_amount : 50000.0;
+        $prevPaid = $penalty ? (float) $penalty->paid_amount : 0.0;
+        $prevWaived = $penalty ? (float) $penalty->waived_amount : 0.0;
+
+        $newWaivedTotal = min($basePenalty - $prevPaid, $prevWaived + $waivedAmount);
+        $newBalance = max(0, $basePenalty - $prevPaid - $newWaivedTotal);
+
+        InvoicePenalty::updateOrCreate(
+            ['invoice_id' => $invoice->id],
+            [
+                'penalty_amount' => $basePenalty,
+                'waived_date' => $waivedDate,
+                'waiver_memo_number' => $memoNumber,
+                'waiver_notes' => $notes,
+                'waived_amount' => $newWaivedTotal,
+                'waived_by_id' => $user->id,
+                'balance_due' => $newBalance,
+            ]
+        );
+
+        $formattedAmount = number_format($waivedAmount, 0, ',', '.');
+        $log = ArService::logActivity([
+            'type' => 'status_changed',
+            'description' => "Penghapusan Denda sebesar Rp {$formattedAmount} disetujui untuk invoice {$invoice->invoice_number} (Memo: {$memoNumber})",
+            'amount' => $waivedAmount,
+            'reference_id' => $invoice->invoice_number,
+            'badge_type' => 'warning',
+        ], $request);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Penghapusan denda Rp {$formattedAmount} (Memo: {$memoNumber}) berhasil diterapkan!",
+            'invoice' => ArTransformer::invoice($invoice->fresh(['customer', 'details', 'installments', 'penalty', 'createdBy'])),
+            'activityLog' => ArTransformer::activityLog($log),
         ]);
     }
 }

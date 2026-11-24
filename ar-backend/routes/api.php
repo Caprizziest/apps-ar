@@ -31,6 +31,8 @@ Route::put('/invoices/{id}', [InvoiceController::class, 'update']);
 Route::delete('/invoices/{id}', [InvoiceController::class, 'destroy']);
 Route::post('/invoices/{id}/issue', [InvoiceController::class, 'issue']);
 Route::post('/invoices/{id}/cancel', [InvoiceController::class, 'cancel']);
+Route::post('/invoices/{id}/penalty/pay', [InvoiceController::class, 'payPenalty']);
+Route::post('/invoices/{id}/penalty/waive', [InvoiceController::class, 'waivePenalty']);
 
 // Payments & Income Audit (UC-05..06, SRS-F-20..31)
 Route::get('/payments', [PaymentController::class, 'index']);
