@@ -9,3 +9,4 @@ download_logs.py
 /.impeccable/
 /.claude/
 /.gemini/
+/.node_modules/
