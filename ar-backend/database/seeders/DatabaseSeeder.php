@@ -2,24 +2,1209 @@
 
 namespace Database\Seeders;
 
+use App\Models\ActivityLog;
+use App\Models\BankAccount;
+use App\Models\Customer;
+use App\Models\CustomerDpTransaction;
+use App\Models\Invoice;
+use App\Models\InvoiceDetail;
+use App\Models\InvoiceInstallment;
+use App\Models\InvoicePenalty;
+use App\Models\Payment;
+use App\Models\PaymentAllocation;
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
     /**
      * Seed the application's database.
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // ==========================================
+        // 1. USERS (RBAC Roles: Admin, Manager, User, Viewer)
+        // ==========================================
+        $adminUser = User::create([
+            'username' => 'admin.ar',
+            'full_name' => 'System Administrator',
+            'email' => 'admin.ar@galesong.co.id',
+            'password' => Hash::make('password'),
+            'role' => 'Admin',
+            'is_active' => true,
+        ]);
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        $managerUser = User::create([
+            'username' => 'manager.ar',
+            'full_name' => 'Siti Rahayu (Manager Keuangan)',
+            'email' => 'manager.ar@galesong.co.id',
+            'password' => Hash::make('password'),
+            'role' => 'Manager',
+            'is_active' => true,
+        ]);
+
+        $staffUser = User::create([
+            'username' => 'finance.ar',
+            'full_name' => 'Budi Santoso (Staf Penagihan AR)',
+            'email' => 'finance.ar@galesong.co.id',
+            'password' => Hash::make('password'),
+            'role' => 'User',
+            'is_active' => true,
+        ]);
+
+        $auditorUser = User::create([
+            'username' => 'audit.fa',
+            'full_name' => 'Rina Hartati (Finance Audit)',
+            'email' => 'audit.fa@galesong.co.id',
+            'password' => Hash::make('password'),
+            'role' => 'User',
+            'is_active' => true,
+        ]);
+
+        User::create([
+            'username' => 'viewer.ar',
+            'full_name' => 'Executive Viewer (Read Only)',
+            'email' => 'viewer.ar@galesong.co.id',
+            'password' => Hash::make('password'),
+            'role' => 'Viewer',
+            'is_active' => true,
+        ]);
+
+        // ==========================================
+        // 2. BANK ACCOUNTS (SRS-F-32, UC-07)
+        // ==========================================
+        $bankBca = BankAccount::create([
+            'bank_name' => 'Bank Central Asia (BCA)',
+            'account_number' => '802-099-1234',
+            'account_holder' => 'PT Galesong Pratama - Hotel Operations',
+            'is_default' => true,
+            'is_active' => true,
+        ]);
+
+        $bankMandiri = BankAccount::create([
+            'bank_name' => 'Bank Mandiri',
+            'account_number' => '137-00-1928374-1',
+            'account_holder' => 'PT Galesong Pratama',
+            'is_default' => false,
+            'is_active' => true,
+        ]);
+
+        $bankBni = BankAccount::create([
+            'bank_name' => 'Bank Negara Indonesia (BNI)',
+            'account_number' => '028-394-8192',
+            'account_holder' => 'PT Galesong Pratama - Banquet & Events',
+            'is_default' => false,
+            'is_active' => true,
+        ]);
+
+        // ==========================================
+        // 3. CUSTOMERS (SRS-F-01..03)
+        // ==========================================
+        $customersData = [
+            'cust-1' => [
+                'code' => 'CUST-001',
+                'name' => 'PT Telekomunikasi Nusantara Tbk',
+                'contact_person' => 'Bambang Sudiro',
+                'email' => 'finance@telkom-nusantara.co.id',
+                'phone' => '+62 21 5299 1000',
+                'address' => 'Jl. Jend. Gatot Subroto Kav. 52, Jakarta Selatan',
+                'nik' => '3174051203840001',
+                'npwp' => '01.345.678.9-012.000',
+                'credit_limit' => 250000000,
+                'due_days' => 30,
+                'status' => 'active',
+                'dp_balance' => 10000000,
+                'notes' => 'Key Corporate Account - Net 30 terms negotiated',
+            ],
+            'cust-2' => [
+                'code' => 'CUST-002',
+                'name' => 'PT Sinarmas Mitra Sejati',
+                'contact_person' => 'Dewi Lestari',
+                'email' => 'ar-vendor@sinarmas-mitra.com',
+                'phone' => '+62 21 3925 800',
+                'address' => 'Plaza Simas Jl. Fachrudin No. 18, Jakarta Pusat',
+                'nik' => '3171025508890002',
+                'npwp' => '02.456.789.0-013.000',
+                'credit_limit' => 150000000,
+                'due_days' => 30,
+                'status' => 'active',
+                'dp_balance' => 0,
+                'notes' => 'Consistent prompt payer, electronic remittance via BCA',
+            ],
+            'cust-3' => [
+                'code' => 'CUST-003',
+                'name' => 'CV Surya Perkasa Mandiri',
+                'contact_person' => 'Hendrik Pratama',
+                'email' => 'hpratama@suryaperkasa.id',
+                'phone' => '+62 31 5678 990',
+                'address' => 'Kawasan Industri Rungkut Blok B-4, Surabaya',
+                'nik' => '3578011904770003',
+                'npwp' => '03.567.890.1-014.000',
+                'credit_limit' => 80000000,
+                'due_days' => 14,
+                'status' => 'credit_hold',
+                'dp_balance' => 0,
+                'notes' => 'Overdue > 60 days on banquet reservation. Credit hold active.',
+            ],
+            'cust-4' => [
+                'code' => 'CUST-004',
+                'name' => 'Grand Horizon Resort & Hospitality',
+                'contact_person' => 'Amanda Putri',
+                'email' => 'accounting@grandhorizonresort.com',
+                'phone' => '+62 361 771 234',
+                'address' => 'Kawasan Pariwisata Nusa Dua Lot NW-1, Bali',
+                'nik' => '5171034407920004',
+                'npwp' => '04.678.901.2-015.000',
+                'credit_limit' => 300000000,
+                'due_days' => 45,
+                'status' => 'active',
+                'dp_balance' => 0,
+                'notes' => 'City Ledger Corporate client - seasonal banquet and guest suites',
+            ],
+            'cust-5' => [
+                'code' => 'CUST-005',
+                'name' => 'PT Karya Bakti Integra',
+                'contact_person' => 'Rudi Hartono',
+                'email' => 'invoicing@karyabakti.co.id',
+                'phone' => '+62 22 4208 112',
+                'address' => 'Jl. Asia Afrika No. 115, Bandung',
+                'nik' => '3273062306850005',
+                'npwp' => '05.789.012.3-016.000',
+                'credit_limit' => 100000000,
+                'due_days' => 30,
+                'status' => 'active',
+                'dp_balance' => 0,
+                'notes' => 'Monthly executive meeting room and catering package',
+            ],
+            'cust-6' => [
+                'code' => 'CUST-006',
+                'name' => 'PT Digital Kreasi Media',
+                'contact_person' => 'Siti Rahmawati',
+                'email' => 'billing@digitalkreasi.com',
+                'phone' => '+62 21 7268 440',
+                'address' => 'One Pacific Place Lt. 15, SCBD Jakarta',
+                'nik' => '3174096001940006',
+                'npwp' => '06.890.123.4-017.000',
+                'credit_limit' => 60000000,
+                'due_days' => 15,
+                'status' => 'active',
+                'dp_balance' => 0,
+                'notes' => 'Company annual gala dinner booking, Net 15 terms',
+            ],
+            'cust-7' => [
+                'code' => 'CUST-007',
+                'name' => 'PT Medika Nusantara Sejahtera',
+                'contact_person' => 'dr. Ardiansyah Pratama',
+                'email' => 'finance@medikanusantara.co.id',
+                'phone' => '+62 811 882 391',
+                'address' => 'Jl. Cemara Indah No. 42, Menteng, Jakarta Pusat',
+                'nik' => '3171011503780007',
+                'npwp' => '07.901.234.5-018.000',
+                'credit_limit' => 50000000,
+                'due_days' => 14,
+                'status' => 'active',
+                'dp_balance' => 0,
+                'notes' => 'Corporate Account - Paket Akomodasi & Simposium Medis (Test Deletion Candidate)',
+            ],
+            'cust-sgm' => [
+                'code' => 'CUST-008',
+                'name' => 'PT. SINAR GALESONG MANDIRI',
+                'contact_person' => 'Drs. H. Syarifuddin',
+                'email' => 'finance@galesong-mandiri.co.id',
+                'phone' => '+62 411 361 8899',
+                'address' => 'Jl. A.P. Pettarani No. 55, Makassar, Sulawesi Selatan',
+                'nik' => '7371052204800008',
+                'npwp' => '01.889.345.2-801.000',
+                'credit_limit' => 500000000,
+                'due_days' => 14,
+                'status' => 'active',
+                'dp_balance' => 10000000,
+                'company_unit' => 'PT. SINAR GALESONG PRATAMA',
+                'notes' => 'Afiliasi Galesong Group - Fleet & Logistics Services',
+            ],
+            'cust-009' => [
+                'code' => 'CUST-009',
+                'name' => 'PT BINTANG TIMUR UTAMA',
+                'contact_person' => 'Bpk. Hendra Gunawan',
+                'email' => 'finance@bintangtimur.co.id',
+                'phone' => '+62 812 4290 8812',
+                'address' => 'Jl. Somba Opu No. 88, Makassar',
+                'nik' => '7371014502900009',
+                'npwp' => '08.123.456.7-802.000',
+                'credit_limit' => 25000000,
+                'due_days' => 30,
+                'status' => 'active',
+                'dp_balance' => 2500000,
+                'notes' => 'Langganan F&B dan Catering Event Galesong',
+            ],
+            'cust-010' => [
+                'code' => 'CUST-010',
+                'name' => 'PT GRAHA MANDIRI NUSANTARA',
+                'contact_person' => 'Bpk. Bambang Wijaya',
+                'email' => 'finance@grahamandiri.co.id',
+                'phone' => '+62 813 5521 9081',
+                'address' => 'Jl. Pengayoman No. 12, Makassar',
+                'nik' => '7371021408850010',
+                'npwp' => '09.234.567.8-803.000',
+                'credit_limit' => 30000000,
+                'due_days' => 14,
+                'status' => 'active',
+                'dp_balance' => 0,
+                'notes' => 'Pelanggan Retail & Service Berkala',
+            ],
+        ];
+
+        $customers = [];
+        foreach ($customersData as $key => $cData) {
+            $customers[$key] = Customer::create($cData);
+        }
+
+        // ==========================================
+        // 4. INVOICES & LINE ITEMS & INSTALLMENTS & PENALTIES
+        // ==========================================
+        $invoicesData = [
+            'inv-101' => [
+                'invoice_number' => 'INV-2026-0001',
+                'journal_number' => 'FN00260801001',
+                'customer_key' => 'cust-1',
+                'issue_date' => '2026-08-01',
+                'due_date' => '2026-08-31',
+                'status' => 'Paid',
+                'invoice_type' => 'Corporate Conference & Banquet',
+                'subtotal' => 60000000,
+                'tax_rate' => 11,
+                'tax_amount' => 6600000,
+                'pph_rate' => 2,
+                'pph_amount' => 1200000,
+                'dp_deduction' => 0,
+                'total' => 65400000,
+                'amount_paid' => 65400000,
+                'balance_due' => 0,
+                'notes' => 'Paid in full via Bank Transfer BCA on 2026-08-25',
+                'source_type' => 'generic',
+                'items' => [
+                    ['description' => 'Grand Ballroom Rental - Full Day Package', 'item_type' => 'Banquet', 'quantity' => 1, 'unit_price' => 45000000, 'line_total' => 45000000],
+                    ['description' => 'VIP Executive Catering (150 pax)', 'item_type' => 'F&B', 'quantity' => 150, 'unit_price' => 100000, 'line_total' => 15000000],
+                ],
+            ],
+            'inv-102' => [
+                'invoice_number' => 'INV-2026-0002',
+                'journal_number' => 'FN00260901002',
+                'customer_key' => 'cust-1',
+                'issue_date' => '2026-09-01',
+                'due_date' => '2026-10-01',
+                'status' => 'Partially Paid',
+                'invoice_type' => 'Executive Meeting & Suites',
+                'subtotal' => 45000000,
+                'tax_rate' => 11,
+                'tax_amount' => 4950000,
+                'pph_rate' => 2,
+                'pph_amount' => 900000,
+                'dp_deduction' => 5000000,
+                'total' => 44050000,
+                'amount_paid' => 20000000,
+                'balance_due' => 24050000,
+                'notes' => 'Installment 1 received on Sep 10 (Rp 20.000.000). Remaining balance due Oct 01.',
+                'source_type' => 'generic',
+                'is_installment' => true,
+                'installment_count' => 2,
+                'installment_interval_days' => 15,
+                'items' => [
+                    ['description' => 'Deluxe Executive Suite (5 nights)', 'item_type' => 'Room', 'quantity' => 5, 'unit_price' => 3000000, 'line_total' => 15000000],
+                    ['description' => 'Boardroom VIP Package + Audio Visual', 'item_type' => 'Facility', 'quantity' => 2, 'unit_price' => 15000000, 'line_total' => 30000000],
+                ],
+                'installments' => [
+                    ['installment_number' => 1, 'due_date' => '2026-09-15', 'amount' => 20000000, 'amount_paid' => 20000000, 'status' => 'Paid', 'paid_date' => '2026-09-10'],
+                    ['installment_number' => 2, 'due_date' => '2026-10-01', 'amount' => 24050000, 'amount_paid' => 0, 'status' => 'Unpaid', 'paid_date' => null],
+                ],
+            ],
+            'inv-103' => [
+                'invoice_number' => 'INV-2026-0003',
+                'journal_number' => 'FN00260905003',
+                'customer_key' => 'cust-2',
+                'issue_date' => '2026-09-05',
+                'due_date' => '2026-10-05',
+                'status' => 'Issued',
+                'invoice_type' => 'Corporate Retreat & Training',
+                'subtotal' => 65000000,
+                'tax_rate' => 11,
+                'tax_amount' => 7150000,
+                'pph_rate' => 2,
+                'pph_amount' => 1300000,
+                'dp_deduction' => 10000000,
+                'total' => 60850000,
+                'amount_paid' => 0,
+                'balance_due' => 60850000,
+                'notes' => 'Issued to Dewi Lestari. Net 30 days due Oct 05.',
+                'source_type' => 'generic',
+                'items' => [
+                    ['description' => 'Function Hall Orchid - 2 Days', 'item_type' => 'Banquet', 'quantity' => 2, 'unit_price' => 20000000, 'line_total' => 40000000],
+                    ['description' => 'Buffet Lunch & Coffee Breaks (100 pax)', 'item_type' => 'F&B', 'quantity' => 100, 'unit_price' => 250000, 'line_total' => 25000000],
+                ],
+            ],
+            'inv-104' => [
+                'invoice_number' => 'INV-2026-0004',
+                'journal_number' => 'FN00260615004',
+                'customer_key' => 'cust-3',
+                'issue_date' => '2026-06-15',
+                'due_date' => '2026-06-29',
+                'status' => 'Overdue',
+                'times_overdue' => 2,
+                'invoice_type' => 'Product Launch & Reception',
+                'subtotal' => 50000000,
+                'tax_rate' => 11,
+                'tax_amount' => 5500000,
+                'pph_rate' => 0,
+                'pph_amount' => 0,
+                'dp_deduction' => 0,
+                'total' => 55500000,
+                'amount_paid' => 10000000,
+                'balance_due' => 45500000,
+                'notes' => '78 days overdue! 2nd collection letter issued. Customer placed on Credit Hold.',
+                'source_type' => 'generic',
+                'items' => [
+                    ['description' => 'Grand Ballroom Setup & LED Wall', 'item_type' => 'Facility', 'quantity' => 1, 'unit_price' => 35000000, 'line_total' => 35000000],
+                    ['description' => 'Cocktail Reception Canape Package', 'item_type' => 'F&B', 'quantity' => 1, 'unit_price' => 15000000, 'line_total' => 15000000],
+                ],
+                'penalty' => ['penalty_amount' => 50000, 'balance_due' => 50000],
+            ],
+            'inv-105' => [
+                'invoice_number' => 'INV-2026-0005',
+                'journal_number' => 'FN00260720005',
+                'customer_key' => 'cust-3',
+                'issue_date' => '2026-07-20',
+                'due_date' => '2026-08-03',
+                'status' => 'Overdue',
+                'times_overdue' => 1,
+                'invoice_type' => 'VIP Guest Accommodation',
+                'subtotal' => 18000000,
+                'tax_rate' => 11,
+                'tax_amount' => 1980000,
+                'pph_rate' => 0,
+                'pph_amount' => 0,
+                'dp_deduction' => 0,
+                'total' => 19980000,
+                'amount_paid' => 0,
+                'balance_due' => 19980000,
+                'notes' => '44 days overdue. Contacting Hendrik Pratama for settlement.',
+                'source_type' => 'generic',
+                'items' => [
+                    ['description' => 'Superior Rooms (10 nights)', 'item_type' => 'Room', 'quantity' => 10, 'unit_price' => 1800000, 'line_total' => 18000000],
+                ],
+                'penalty' => ['penalty_amount' => 50000, 'balance_due' => 50000],
+            ],
+            'inv-106' => [
+                'invoice_number' => 'INV-2026-0006',
+                'journal_number' => 'FN00260810006',
+                'customer_key' => 'cust-4',
+                'issue_date' => '2026-08-10',
+                'due_date' => '2026-09-24',
+                'status' => 'Issued',
+                'invoice_type' => 'City Ledger Folio Transfer',
+                'subtotal' => 95000000,
+                'tax_rate' => 11,
+                'tax_amount' => 10450000,
+                'pph_rate' => 2,
+                'pph_amount' => 1900000,
+                'dp_deduction' => 0,
+                'total' => 103550000,
+                'amount_paid' => 0,
+                'balance_due' => 103550000,
+                'notes' => 'City Ledger agreement, Net 45 terms, due Sep 24, 2026',
+                'source_type' => 'city_ledger',
+                'items' => [
+                    ['description' => 'Inter-hotel Guest Billing Folio #88192', 'item_type' => 'Room', 'quantity' => 1, 'unit_price' => 75000000, 'line_total' => 75000000],
+                    ['description' => 'Banquet Shared Event Fee', 'item_type' => 'Banquet', 'quantity' => 1, 'unit_price' => 20000000, 'line_total' => 20000000],
+                ],
+            ],
+            'inv-107' => [
+                'invoice_number' => 'INV-2026-0007',
+                'journal_number' => 'FN00260815007',
+                'customer_key' => 'cust-5',
+                'issue_date' => '2026-08-15',
+                'due_date' => '2026-09-14',
+                'status' => 'Overdue',
+                'times_overdue' => 1,
+                'invoice_type' => 'Monthly Corporate Meeting',
+                'subtotal' => 28000000,
+                'tax_rate' => 11,
+                'tax_amount' => 3080000,
+                'pph_rate' => 2,
+                'pph_amount' => 560000,
+                'dp_deduction' => 0,
+                'total' => 30520000,
+                'amount_paid' => 0,
+                'balance_due' => 30520000,
+                'notes' => '2 days overdue. Sent reminder via WhatsApp & email.',
+                'source_type' => 'generic',
+                'items' => [
+                    ['description' => 'Meeting Room Package & Buffet Lunch', 'item_type' => 'Banquet', 'quantity' => 1, 'unit_price' => 28000000, 'line_total' => 28000000],
+                ],
+                'penalty' => ['penalty_amount' => 50000, 'balance_due' => 50000],
+            ],
+            'inv-108' => [
+                'invoice_number' => 'INV-2026-0008',
+                'journal_number' => 'FN00260912008',
+                'customer_key' => 'cust-6',
+                'issue_date' => '2026-09-12',
+                'due_date' => '2026-09-27',
+                'status' => 'Draft',
+                'invoice_type' => 'Annual Gathering & Dinner',
+                'subtotal' => 32000000,
+                'tax_rate' => 11,
+                'tax_amount' => 3520000,
+                'pph_rate' => 2,
+                'pph_amount' => 640000,
+                'dp_deduction' => 5000000,
+                'total' => 29880000,
+                'amount_paid' => 0,
+                'balance_due' => 29880000,
+                'notes' => 'Draft awaiting final review before dispatch. Editable and deletable.',
+                'source_type' => 'generic',
+                'items' => [
+                    ['description' => 'Poolside Terrace Gala Event Area', 'item_type' => 'Facility', 'quantity' => 1, 'unit_price' => 22000000, 'line_total' => 22000000],
+                    ['description' => 'International Buffet & Live Cooking (50 pax)', 'item_type' => 'F&B', 'quantity' => 50, 'unit_price' => 200000, 'line_total' => 10000000],
+                ],
+            ],
+            'inv-109' => [
+                'invoice_number' => 'INV-2026-0009',
+                'journal_number' => 'FN00260701009',
+                'customer_key' => 'cust-2',
+                'issue_date' => '2026-07-01',
+                'due_date' => '2026-07-31',
+                'status' => 'Cancelled',
+                'invoice_type' => 'Erroneous Duplicate Invoice',
+                'subtotal' => 15000000,
+                'tax_rate' => 11,
+                'tax_amount' => 1650000,
+                'pph_rate' => 0,
+                'pph_amount' => 0,
+                'dp_deduction' => 0,
+                'total' => 16650000,
+                'amount_paid' => 0,
+                'balance_due' => 0,
+                'notes' => 'Cancelled per Manager approval. Duplicate billing detected.',
+                'source_type' => 'generic',
+                'cancellation_reason' => 'Replaced by INV-2026-0003 - incorrect PO details and duplicate room package',
+                'cancelled_at' => '2026-07-05 10:00:00',
+                'cancelled_by_id' => $managerUser->id,
+                'cancelled_by_name' => 'Manager Keuangan',
+                'items' => [
+                    ['description' => 'Duplicate Banquet Billing for Hall Orchid', 'item_type' => 'Banquet', 'quantity' => 1, 'unit_price' => 15000000, 'line_total' => 15000000],
+                ],
+            ],
+            // Data Riil PT Sinar Galesong Mandiri
+            'inv-sgm-01' => [
+                'invoice_number' => '008/INV/SGP-FNC/08-2026',
+                'journal_number' => 'FN00260803008',
+                'customer_key' => 'cust-sgm',
+                'issue_date' => '2026-08-03',
+                'due_date' => '2026-08-17',
+                'status' => 'Paid',
+                'invoice_type' => 'Invoice 008/INV/SGP-FNC/08-2026',
+                'company_unit' => 'PT. SINAR GALESONG PRATAMA',
+                'subtotal' => 4797500,
+                'tax_rate' => 0,
+                'tax_amount' => 0,
+                'pph_rate' => 0,
+                'pph_amount' => 0,
+                'dp_deduction' => 0,
+                'total' => 4797500,
+                'amount_paid' => 4797500,
+                'balance_due' => 0,
+                'notes' => 'Invoice 008/INV/SGP-FNC/08-2026 (Lunas via Bank Mandiri)',
+                'source_type' => 'generic',
+                'items' => [
+                    ['description' => 'Pengadaan Armada Operasional & Pemeliharaan Berkala', 'item_type' => 'Service', 'quantity' => 1, 'unit_price' => 4797500, 'line_total' => 4797500],
+                ],
+            ],
+            'inv-sgm-02' => [
+                'invoice_number' => '008/INV/SGP-FNC/09-2026',
+                'journal_number' => 'FN00260901008',
+                'customer_key' => 'cust-sgm',
+                'issue_date' => '2026-09-01',
+                'due_date' => '2026-09-15',
+                'status' => 'Overdue',
+                'times_overdue' => 1,
+                'invoice_type' => 'Invoice 008/INV/SGP-FNC/09-2026',
+                'company_unit' => 'PT. SINAR GALESONG PRATAMA',
+                'subtotal' => 4797500,
+                'tax_rate' => 0,
+                'tax_amount' => 0,
+                'pph_rate' => 0,
+                'pph_amount' => 0,
+                'dp_deduction' => 0,
+                'total' => 4797500,
+                'amount_paid' => 0,
+                'balance_due' => 4797500,
+                'notes' => 'No Payment for Invoice 008/INV/SGP-FNC/09-2026',
+                'source_type' => 'generic',
+                'items' => [
+                    ['description' => 'Biaya Layanan Kendaraan Operasional September 2026', 'item_type' => 'Service', 'quantity' => 1, 'unit_price' => 4797500, 'line_total' => 4797500],
+                ],
+                'penalty' => ['penalty_amount' => 50000, 'balance_due' => 50000],
+            ],
+            // Data Riil PT BINTANG TIMUR UTAMA
+            'inv-ain-01' => [
+                'invoice_number' => 'ARP260104063',
+                'journal_number' => 'FN00260104063',
+                'customer_key' => 'cust-009',
+                'issue_date' => '2026-01-04',
+                'due_date' => '2026-01-18',
+                'status' => 'Paid',
+                'invoice_type' => 'PVC0001 BINTANG TIMUR, January 2026',
+                'subtotal' => 22000,
+                'tax_rate' => 0,
+                'tax_amount' => 0,
+                'pph_rate' => 0,
+                'pph_amount' => 0,
+                'dp_deduction' => 0,
+                'total' => 22000,
+                'amount_paid' => 22000,
+                'balance_due' => 0,
+                'notes' => 'PVC0001 BINTANG TIMUR, January 2026',
+                'source_type' => 'generic',
+                'items' => [
+                    ['description' => 'PVC0001 BINTANG TIMUR, January 2026', 'item_type' => 'F&B', 'quantity' => 1, 'unit_price' => 22000, 'line_total' => 22000],
+                ],
+            ],
+            'inv-ain-02' => [
+                'invoice_number' => 'ARP260109061',
+                'journal_number' => 'FN00260109061',
+                'customer_key' => 'cust-009',
+                'issue_date' => '2026-01-09',
+                'due_date' => '2026-01-23',
+                'status' => 'Paid',
+                'invoice_type' => 'PVC0001 BINTANG TIMUR, January 2026',
+                'subtotal' => 20000,
+                'tax_rate' => 0,
+                'tax_amount' => 0,
+                'pph_rate' => 0,
+                'pph_amount' => 0,
+                'dp_deduction' => 0,
+                'total' => 20000,
+                'amount_paid' => 20000,
+                'balance_due' => 0,
+                'notes' => 'PVC0001 BINTANG TIMUR, January 2026',
+                'source_type' => 'generic',
+                'items' => [
+                    ['description' => 'PVC0001 BINTANG TIMUR, January 2026', 'item_type' => 'F&B', 'quantity' => 1, 'unit_price' => 20000, 'line_total' => 20000],
+                ],
+            ],
+            'inv-ain-03' => [
+                'invoice_number' => 'ARP260116009',
+                'journal_number' => 'FN00260116009',
+                'customer_key' => 'cust-009',
+                'issue_date' => '2026-01-16',
+                'due_date' => '2026-01-30',
+                'status' => 'Paid',
+                'invoice_type' => 'PVC0001 BINTANG TIMUR, January 2026',
+                'subtotal' => 21500,
+                'tax_rate' => 0,
+                'tax_amount' => 0,
+                'pph_rate' => 0,
+                'pph_amount' => 0,
+                'dp_deduction' => 0,
+                'total' => 21500,
+                'amount_paid' => 21500,
+                'balance_due' => 0,
+                'notes' => 'PVC0001 BINTANG TIMUR, January 2026',
+                'source_type' => 'generic',
+                'items' => [
+                    ['description' => 'PVC0001 BINTANG TIMUR, January 2026', 'item_type' => 'F&B', 'quantity' => 1, 'unit_price' => 21500, 'line_total' => 21500],
+                ],
+            ],
+            'inv-ain-04' => [
+                'invoice_number' => 'ARP260116066',
+                'journal_number' => 'FN00260116066',
+                'customer_key' => 'cust-009',
+                'issue_date' => '2026-01-16',
+                'due_date' => '2026-01-30',
+                'status' => 'Paid',
+                'invoice_type' => 'PVC0001 BINTANG TIMUR, January 2026',
+                'subtotal' => 65000,
+                'tax_rate' => 0,
+                'tax_amount' => 0,
+                'pph_rate' => 0,
+                'pph_amount' => 0,
+                'dp_deduction' => 0,
+                'total' => 65000,
+                'amount_paid' => 65000,
+                'balance_due' => 0,
+                'notes' => 'PVC0001 BINTANG TIMUR, January 2026',
+                'source_type' => 'generic',
+                'items' => [
+                    ['description' => 'PVC0001 BINTANG TIMUR, January 2026', 'item_type' => 'F&B', 'quantity' => 1, 'unit_price' => 65000, 'line_total' => 65000],
+                ],
+            ],
+            'inv-ain-05' => [
+                'invoice_number' => 'ARP260117083',
+                'journal_number' => 'FN00260117083',
+                'customer_key' => 'cust-009',
+                'issue_date' => '2026-01-17',
+                'due_date' => '2026-01-31',
+                'status' => 'Paid',
+                'invoice_type' => 'PVC0001 BINTANG TIMUR, January 2026',
+                'subtotal' => 18500,
+                'tax_rate' => 0,
+                'tax_amount' => 0,
+                'pph_rate' => 0,
+                'pph_amount' => 0,
+                'dp_deduction' => 0,
+                'total' => 18500,
+                'amount_paid' => 18500,
+                'balance_due' => 0,
+                'notes' => 'PVC0001 BINTANG TIMUR, January 2026',
+                'source_type' => 'generic',
+                'items' => [
+                    ['description' => 'PVC0001 BINTANG TIMUR, January 2026', 'item_type' => 'F&B', 'quantity' => 1, 'unit_price' => 18500, 'line_total' => 18500],
+                ],
+            ],
+            'inv-ain-06' => [
+                'invoice_number' => 'ARP260118047',
+                'journal_number' => 'FN00260118047',
+                'customer_key' => 'cust-009',
+                'issue_date' => '2026-01-18',
+                'due_date' => '2026-02-01',
+                'status' => 'Paid',
+                'invoice_type' => 'PVC0001 BINTANG TIMUR, January 2026',
+                'subtotal' => 15000,
+                'tax_rate' => 0,
+                'tax_amount' => 0,
+                'pph_rate' => 0,
+                'pph_amount' => 0,
+                'dp_deduction' => 0,
+                'total' => 15000,
+                'amount_paid' => 15000,
+                'balance_due' => 0,
+                'notes' => 'PVC0001 BINTANG TIMUR, January 2026',
+                'source_type' => 'generic',
+                'items' => [
+                    ['description' => 'PVC0001 BINTANG TIMUR, January 2026', 'item_type' => 'F&B', 'quantity' => 1, 'unit_price' => 15000, 'line_total' => 15000],
+                ],
+            ],
+            'inv-ain-07' => [
+                'invoice_number' => 'ARP260124011',
+                'journal_number' => 'FN00260124011',
+                'customer_key' => 'cust-009',
+                'issue_date' => '2026-01-24',
+                'due_date' => '2026-02-07',
+                'status' => 'Paid',
+                'invoice_type' => 'PVC0001 BINTANG TIMUR, January 2026',
+                'subtotal' => 9000,
+                'tax_rate' => 0,
+                'tax_amount' => 0,
+                'pph_rate' => 0,
+                'pph_amount' => 0,
+                'dp_deduction' => 0,
+                'total' => 9000,
+                'amount_paid' => 9000,
+                'balance_due' => 0,
+                'notes' => 'PVC0001 BINTANG TIMUR, January 2026',
+                'source_type' => 'generic',
+                'items' => [
+                    ['description' => 'PVC0001 BINTANG TIMUR, January 2026', 'item_type' => 'F&B', 'quantity' => 1, 'unit_price' => 9000, 'line_total' => 9000],
+                ],
+            ],
+            'inv-ain-08' => [
+                'invoice_number' => 'ARP260125181',
+                'journal_number' => 'FN00260125181',
+                'customer_key' => 'cust-009',
+                'issue_date' => '2026-01-25',
+                'due_date' => '2026-02-08',
+                'status' => 'Paid',
+                'invoice_type' => 'PVC0001 BINTANG TIMUR, January 2026',
+                'subtotal' => 14000,
+                'tax_rate' => 0,
+                'tax_amount' => 0,
+                'pph_rate' => 0,
+                'pph_amount' => 0,
+                'dp_deduction' => 0,
+                'total' => 14000,
+                'amount_paid' => 14000,
+                'balance_due' => 0,
+                'notes' => 'PVC0001 BINTANG TIMUR, January 2026',
+                'source_type' => 'generic',
+                'items' => [
+                    ['description' => 'PVC0001 BINTANG TIMUR, January 2026', 'item_type' => 'F&B', 'quantity' => 1, 'unit_price' => 14000, 'line_total' => 14000],
+                ],
+            ],
+            'inv-ain-09' => [
+                'invoice_number' => 'ARP260125142',
+                'journal_number' => 'FN00260125142',
+                'customer_key' => 'cust-009',
+                'issue_date' => '2026-01-25',
+                'due_date' => '2026-02-08',
+                'status' => 'Paid',
+                'invoice_type' => 'PVC0001 BINTANG TIMUR, January 2026',
+                'subtotal' => 3000,
+                'tax_rate' => 0,
+                'tax_amount' => 0,
+                'pph_rate' => 0,
+                'pph_amount' => 0,
+                'dp_deduction' => 0,
+                'total' => 3000,
+                'amount_paid' => 3000,
+                'balance_due' => 0,
+                'notes' => 'PVC0001 BINTANG TIMUR, January 2026',
+                'source_type' => 'generic',
+                'items' => [
+                    ['description' => 'PVC0001 BINTANG TIMUR, January 2026', 'item_type' => 'F&B', 'quantity' => 1, 'unit_price' => 3000, 'line_total' => 3000],
+                ],
+            ],
+            'inv-ain-10' => [
+                'invoice_number' => 'ARP260131015',
+                'journal_number' => 'FN00260131015',
+                'customer_key' => 'cust-009',
+                'issue_date' => '2026-01-31',
+                'due_date' => '2026-02-14',
+                'status' => 'Issued',
+                'invoice_type' => 'PVC0001 BINTANG TIMUR, January 2026',
+                'subtotal' => 12000,
+                'tax_rate' => 0,
+                'tax_amount' => 0,
+                'pph_rate' => 0,
+                'pph_amount' => 0,
+                'dp_deduction' => 0,
+                'total' => 12000,
+                'amount_paid' => 0,
+                'balance_due' => 12000,
+                'notes' => 'PVC0001 BINTANG TIMUR, January 2026',
+                'source_type' => 'generic',
+                'items' => [
+                    ['description' => 'PVC0001 BINTANG TIMUR, January 2026', 'item_type' => 'F&B', 'quantity' => 1, 'unit_price' => 12000, 'line_total' => 12000],
+                ],
+            ],
+            'inv-ain-11' => [
+                'invoice_number' => 'ARP260201043',
+                'journal_number' => 'FN00260201043',
+                'customer_key' => 'cust-009',
+                'issue_date' => '2026-02-01',
+                'due_date' => '2026-02-15',
+                'status' => 'Issued',
+                'invoice_type' => 'PVC0001 BINTANG TIMUR, February 2026',
+                'subtotal' => 20000,
+                'tax_rate' => 0,
+                'tax_amount' => 0,
+                'pph_rate' => 0,
+                'pph_amount' => 0,
+                'dp_deduction' => 0,
+                'total' => 20000,
+                'amount_paid' => 0,
+                'balance_due' => 20000,
+                'notes' => 'PVC0001 BINTANG TIMUR, February 2026',
+                'source_type' => 'generic',
+                'items' => [
+                    ['description' => 'PVC0001 BINTANG TIMUR, February 2026', 'item_type' => 'F&B', 'quantity' => 1, 'unit_price' => 20000, 'line_total' => 20000],
+                ],
+            ],
+        ];
+
+        $invoices = [];
+        foreach ($invoicesData as $invKey => $invData) {
+            $cust = $customers[$invData['customer_key']];
+            $items = $invData['items'] ?? [];
+            $installments = $invData['installments'] ?? [];
+            $penalty = $invData['penalty'] ?? null;
+
+            unset($invData['customer_key'], $invData['items'], $invData['installments'], $invData['penalty']);
+
+            $inv = Invoice::create(array_merge($invData, [
+                'customer_id' => $cust->id,
+                'customer_nik' => $cust->nik,
+                'customer_npwp' => $cust->npwp,
+                'created_by_id' => $staffUser->id,
+            ]));
+
+            foreach ($items as $item) {
+                InvoiceDetail::create(array_merge($item, [
+                    'invoice_id' => $inv->id,
+                ]));
+            }
+
+            foreach ($installments as $inst) {
+                InvoiceInstallment::create(array_merge($inst, [
+                    'invoice_id' => $inv->id,
+                ]));
+            }
+
+            if ($penalty) {
+                InvoicePenalty::create(array_merge($penalty, [
+                    'invoice_id' => $inv->id,
+                ]));
+            }
+
+            $invoices[$invKey] = $inv;
+        }
+
+        // ==========================================
+        // 5. PAYMENTS & PAYMENT ALLOCATIONS
+        // ==========================================
+        $paymentsData = [
+            'pay-201' => [
+                'payment_number' => 'PAY-2026-0001',
+                'journal_number' => 'BD00260825001',
+                'kwitansi_number' => '501/KLBR-FNC/MKS/VIII/2026',
+                'customer_key' => 'cust-1',
+                'bank_account_id' => $bankBca->id,
+                'payment_date' => '2026-08-25',
+                'amount' => 65400000,
+                'method' => 'bank_transfer',
+                'payment_channel' => 'BCA (Overbooking)',
+                'reference_number' => 'TRF-BCA-8839120',
+                'admin_fee' => 0,
+                'notes' => 'Full settlement of INV-2026-0001',
+                'audit_status' => 'verified_fa',
+                'audited_by_id' => $auditorUser->id,
+                'audited_by_name' => 'Rina Hartati (Finance Audit)',
+                'audited_at' => '2026-08-26 09:30:00',
+                'attachment_name' => 'slip_transfer_bca_8839120.pdf',
+                'attachment_size' => '1.2 MB',
+                'allocations' => [
+                    ['invoice_key' => 'inv-101', 'allocated_amount' => 65400000, 'times_paid' => 1],
+                ],
+            ],
+            'pay-202' => [
+                'payment_number' => 'PAY-2026-0002',
+                'journal_number' => 'BD00260910002',
+                'kwitansi_number' => '502/KLBR-FNC/MKS/IX/2026',
+                'customer_key' => 'cust-1',
+                'bank_account_id' => $bankBca->id,
+                'payment_date' => '2026-09-10',
+                'amount' => 20000000,
+                'method' => 'virtual_account',
+                'payment_channel' => 'BCA Virtual Account',
+                'reference_number' => 'VA-BCA-9921004',
+                'admin_fee' => 5000,
+                'notes' => 'Installment 1 of 2 against INV-2026-0002',
+                'audit_status' => 'pending_fa',
+                'attachment_name' => 'slip_va_bca_9921004.pdf',
+                'attachment_size' => '840 KB',
+                'allocations' => [
+                    ['invoice_key' => 'inv-102', 'allocated_amount' => 20000000, 'times_paid' => 1],
+                ],
+            ],
+            'pay-203' => [
+                'payment_number' => 'PAY-2026-0003',
+                'journal_number' => 'BD00260715003',
+                'kwitansi_number' => '503/KLBR-FNC/MKS/VII/2026',
+                'customer_key' => 'cust-3',
+                'bank_account_id' => $bankMandiri->id,
+                'payment_date' => '2026-07-15',
+                'amount' => 10000000,
+                'method' => 'bank_transfer',
+                'payment_channel' => 'Bank Mandiri Giro',
+                'reference_number' => 'MDR-GIRO-004812',
+                'admin_fee' => 0,
+                'notes' => 'Partial settlement for launch reception',
+                'audit_status' => 'pending_fa',
+                'allocations' => [
+                    ['invoice_key' => 'inv-104', 'allocated_amount' => 10000000, 'times_paid' => 1],
+                ],
+            ],
+            'pay-sgm-01' => [
+                'payment_number' => 'PAY-2026-0004',
+                'journal_number' => 'BD00260828001',
+                'kwitansi_number' => '102/SGP-KWT/VIII/2026',
+                'customer_key' => 'cust-sgm',
+                'bank_account_id' => $bankMandiri->id,
+                'payment_date' => '2026-08-28',
+                'amount' => 4797500,
+                'method' => 'bank_transfer',
+                'payment_channel' => 'Bank Mandiri',
+                'reference_number' => 'BD00260828001',
+                'admin_fee' => 0,
+                'notes' => 'Payment for Invoice 008/INV/SGP-FNC/08-2026',
+                'audit_status' => 'verified_fa',
+                'audited_by_id' => $auditorUser->id,
+                'audited_by_name' => 'Rina Hartati (Finance Audit)',
+                'audited_at' => '2026-08-29 11:00:00',
+                'allocations' => [
+                    ['invoice_key' => 'inv-sgm-01', 'allocated_amount' => 4797500, 'times_paid' => 1],
+                ],
+            ],
+            'pay-ain-01' => [
+                'payment_number' => 'PAY-AIN-01',
+                'journal_number' => 'BD00260128001',
+                'kwitansi_number' => '540/KLBR-FNC/MKS/I/2026',
+                'customer_key' => 'cust-009',
+                'payment_date' => '2026-01-28',
+                'amount' => 15000,
+                'method' => 'cash',
+                'payment_channel' => 'Kasir Front Office',
+                'reference_number' => '540/KLBR-FNC/MKS/I/2026',
+                'notes' => 'Payment for invoice ARP251220015',
+                'audit_status' => 'verified_fa',
+                'audited_by_id' => $auditorUser->id,
+                'audited_by_name' => 'Staf Income Audit FA',
+                'audited_at' => '2026-01-29 08:30:00',
+                'allocations' => [
+                    ['invoice_key' => 'inv-ain-01', 'allocated_amount' => 15000, 'times_paid' => 1],
+                ],
+            ],
+            'pay-ain-02' => [
+                'payment_number' => 'PAY-AIN-02',
+                'journal_number' => 'BD00260128002',
+                'kwitansi_number' => '542/KLBR-FNC/MKS/I/2026',
+                'customer_key' => 'cust-009',
+                'payment_date' => '2026-01-28',
+                'amount' => 26000,
+                'method' => 'cash',
+                'payment_channel' => 'Kasir Front Office',
+                'reference_number' => '542/KLBR-FNC/MKS/I/2026',
+                'notes' => 'Payment for invoice ARP251227021',
+                'audit_status' => 'verified_fa',
+                'audited_by_id' => $auditorUser->id,
+                'audited_by_name' => 'Staf Income Audit FA',
+                'audited_at' => '2026-01-29 08:30:00',
+                'allocations' => [
+                    ['invoice_key' => 'inv-ain-02', 'allocated_amount' => 26000, 'times_paid' => 1],
+                ],
+            ],
+            'pay-ain-03' => [
+                'payment_number' => 'PAY-AIN-03',
+                'journal_number' => 'BD00260128003',
+                'kwitansi_number' => '541/KLBR-FNC/MKS/I/2026',
+                'customer_key' => 'cust-009',
+                'payment_date' => '2026-01-28',
+                'amount' => 9000,
+                'method' => 'cash',
+                'payment_channel' => 'Kasir Front Office',
+                'reference_number' => '541/KLBR-FNC/MKS/I/2026',
+                'notes' => 'Payment for invoice ARP251221062',
+                'audit_status' => 'verified_fa',
+                'audited_by_id' => $auditorUser->id,
+                'audited_by_name' => 'Staf Income Audit FA',
+                'audited_at' => '2026-01-29 08:30:00',
+                'allocations' => [
+                    ['invoice_key' => 'inv-ain-03', 'allocated_amount' => 9000, 'times_paid' => 1],
+                ],
+            ],
+            'pay-ain-04' => [
+                'payment_number' => 'PAY-AIN-04',
+                'journal_number' => 'BD00260128004',
+                'kwitansi_number' => '539/KLBR-FNC/MKS/I/2026',
+                'customer_key' => 'cust-009',
+                'payment_date' => '2026-01-28',
+                'amount' => 26000,
+                'method' => 'cash',
+                'payment_channel' => 'Kasir Front Office',
+                'reference_number' => '539/KLBR-FNC/MKS/I/2026',
+                'notes' => 'Payment for invoice ARP251216016',
+                'audit_status' => 'verified_fa',
+                'audited_by_id' => $auditorUser->id,
+                'audited_by_name' => 'Staf Income Audit FA',
+                'audited_at' => '2026-01-29 08:30:00',
+                'allocations' => [
+                    ['invoice_key' => 'inv-ain-04', 'allocated_amount' => 26000, 'times_paid' => 1],
+                ],
+            ],
+            'pay-ain-05' => [
+                'payment_number' => 'PAY-AIN-05',
+                'journal_number' => 'BD00260128005',
+                'kwitansi_number' => '538/KLBR-FNC/MKS/I/2026',
+                'customer_key' => 'cust-009',
+                'payment_date' => '2026-01-28',
+                'amount' => 16000,
+                'method' => 'cash',
+                'payment_channel' => 'Kasir Front Office',
+                'reference_number' => '538/KLBR-FNC/MKS/I/2026',
+                'notes' => 'Payment for invoice ARP251214050',
+                'audit_status' => 'verified_fa',
+                'audited_by_id' => $auditorUser->id,
+                'audited_by_name' => 'Staf Income Audit FA',
+                'audited_at' => '2026-01-29 08:30:00',
+                'allocations' => [
+                    ['invoice_key' => 'inv-ain-05', 'allocated_amount' => 16000, 'times_paid' => 1],
+                ],
+            ],
+            'pay-ain-06' => [
+                'payment_number' => 'PAY-AIN-06',
+                'journal_number' => 'BD00260128006',
+                'kwitansi_number' => '537/KLBR-FNC/MKS/I/2026',
+                'customer_key' => 'cust-009',
+                'payment_date' => '2026-01-28',
+                'amount' => 18500,
+                'method' => 'cash',
+                'payment_channel' => 'Kasir Front Office',
+                'reference_number' => '537/KLBR-FNC/MKS/I/2026',
+                'notes' => 'Payment for invoice ARP251213056',
+                'audit_status' => 'verified_fa',
+                'audited_by_id' => $auditorUser->id,
+                'audited_by_name' => 'Staf Income Audit FA',
+                'audited_at' => '2026-01-29 08:30:00',
+                'allocations' => [
+                    ['invoice_key' => 'inv-ain-06', 'allocated_amount' => 18500, 'times_paid' => 1],
+                ],
+            ],
+            'pay-ain-07' => [
+                'payment_number' => 'PAY-AIN-07',
+                'journal_number' => 'BD00260128007',
+                'kwitansi_number' => '536/KLBR-FNC/MKS/I/2026',
+                'customer_key' => 'cust-009',
+                'payment_date' => '2026-01-28',
+                'amount' => 14000,
+                'method' => 'cash',
+                'payment_channel' => 'Kasir Front Office',
+                'reference_number' => '536/KLBR-FNC/MKS/I/2026',
+                'notes' => 'Payment for invoice ARP251207028',
+                'audit_status' => 'verified_fa',
+                'audited_by_id' => $auditorUser->id,
+                'audited_by_name' => 'Staf Income Audit FA',
+                'audited_at' => '2026-01-29 08:30:00',
+                'allocations' => [
+                    ['invoice_key' => 'inv-ain-07', 'allocated_amount' => 14000, 'times_paid' => 1],
+                ],
+            ],
+            'pay-ain-08' => [
+                'payment_number' => 'PAY-AIN-08',
+                'journal_number' => 'BD00260128008',
+                'kwitansi_number' => '535/KLBR-FNC/MKS/I/2026',
+                'customer_key' => 'cust-009',
+                'payment_date' => '2026-01-28',
+                'amount' => 18000,
+                'method' => 'cash',
+                'payment_channel' => 'Kasir Front Office',
+                'reference_number' => '535/KLBR-FNC/MKS/I/2026',
+                'notes' => 'Payment for invoice ARP251206035',
+                'audit_status' => 'verified_fa',
+                'audited_by_id' => $auditorUser->id,
+                'audited_by_name' => 'Staf Income Audit FA',
+                'audited_at' => '2026-01-29 08:30:00',
+                'allocations' => [
+                    ['invoice_key' => 'inv-ain-08', 'allocated_amount' => 18000, 'times_paid' => 1],
+                ],
+            ],
+        ];
+
+        foreach ($paymentsData as $payData) {
+            $cust = $customers[$payData['customer_key']];
+            $allocations = $payData['allocations'] ?? [];
+            unset($payData['customer_key'], $payData['allocations']);
+
+            $payment = Payment::create(array_merge($payData, [
+                'customer_id' => $cust->id,
+                'created_by_id' => $staffUser->id,
+            ]));
+
+            foreach ($allocations as $alloc) {
+                $inv = $invoices[$alloc['invoice_key']];
+                PaymentAllocation::create([
+                    'payment_id' => $payment->id,
+                    'invoice_id' => $inv->id,
+                    'allocated_amount' => $alloc['allocated_amount'],
+                    'times_paid' => $alloc['times_paid'],
+                ]);
+            }
+        }
+
+        // ==========================================
+        // 6. CUSTOMER DP TRANSACTIONS (DP LEDGER)
+        // ==========================================
+        CustomerDpTransaction::create([
+            'customer_id' => $customers['cust-1']->id,
+            'transaction_date' => '2026-08-15',
+            'type' => 'deposit',
+            'amount' => 15000000,
+            'balance_after' => 15000000,
+            'reference_number' => 'TRF-BCA-DP-110',
+            'notes' => 'Setoran uang muka reservasi ballroom & banquet Q4',
+            'created_by_id' => $staffUser->id,
+        ]);
+
+        CustomerDpTransaction::create([
+            'customer_id' => $customers['cust-1']->id,
+            'invoice_id' => $invoices['inv-102']->id,
+            'transaction_date' => '2026-09-01',
+            'type' => 'applied',
+            'amount' => 5000000,
+            'balance_after' => 10000000,
+            'reference_number' => 'INV-2026-0002',
+            'notes' => 'Pemotongan DP pada Invoice INV-2026-0002 (Deluxe Suite)',
+            'created_by_id' => $staffUser->id,
+        ]);
+
+        CustomerDpTransaction::create([
+            'customer_id' => $customers['cust-sgm']->id,
+            'transaction_date' => '2026-08-01',
+            'type' => 'deposit',
+            'amount' => 10000000,
+            'balance_after' => 10000000,
+            'reference_number' => 'TRF-MND-DP-55',
+            'notes' => 'Deposit awal kontrak armada operasional & event support',
+            'created_by_id' => $staffUser->id,
+        ]);
+
+        CustomerDpTransaction::create([
+            'customer_id' => $customers['cust-009']->id,
+            'transaction_date' => '2026-01-02',
+            'type' => 'deposit',
+            'amount' => 2500000,
+            'balance_after' => 2500000,
+            'reference_number' => 'TRF-BCA-BTU-01',
+            'notes' => 'Setoran Uang Muka paket katering rutin semester 1',
+            'created_by_id' => $staffUser->id,
+        ]);
+
+        // ==========================================
+        // 7. ACTIVITY LOGS / AUDIT TRAIL
+        // ==========================================
+        ActivityLog::create([
+            'user_id' => $adminUser->id,
+            'user_name' => 'Sistem',
+            'user_role' => 'Admin',
+            'type' => 'status_changed',
+            'description' => 'System recalculated aging: INV-2026-0007 flagged as Overdue (2 days past due)',
+            'badge_type' => 'warning',
+            'logged_at' => '2026-09-16 09:30:00',
+        ]);
+
+        ActivityLog::create([
+            'user_id' => $staffUser->id,
+            'user_name' => 'Budi Santoso',
+            'user_role' => 'User',
+            'type' => 'invoice_created',
+            'description' => 'Draft invoice INV-2026-0008 created for PT Digital Kreasi Media',
+            'amount' => 29880000,
+            'reference_id' => 'INV-2026-0008',
+            'badge_type' => 'secondary',
+            'logged_at' => '2026-09-12 14:15:00',
+        ]);
+
+        ActivityLog::create([
+            'user_id' => $staffUser->id,
+            'user_name' => 'Budi Santoso',
+            'user_role' => 'User',
+            'type' => 'payment_recorded',
+            'description' => 'Payment PAY-2026-0002 (Rp 20.000.000) recorded via BCA VA for PT Telekomunikasi Nusantara',
+            'amount' => 20000000,
+            'reference_id' => 'PAY-2026-0002',
+            'badge_type' => 'success',
+            'logged_at' => '2026-09-10 11:20:00',
+        ]);
+
+        ActivityLog::create([
+            'user_id' => $staffUser->id,
+            'user_name' => 'Budi Santoso',
+            'user_role' => 'User',
+            'type' => 'invoice_issued',
+            'description' => 'Invoice INV-2026-0003 issued & sent to PT Sinarmas Mitra Sejati',
+            'amount' => 60850000,
+            'reference_id' => 'INV-2026-0003',
+            'badge_type' => 'info',
+            'logged_at' => '2026-09-05 16:45:00',
+        ]);
+
+        ActivityLog::create([
+            'user_id' => $managerUser->id,
+            'user_name' => 'Siti Rahayu',
+            'user_role' => 'Manager',
+            'type' => 'invoice_cancelled',
+            'description' => 'Invoice INV-2026-0009 cancelled with reason: "Replaced by INV-2026-0003 - duplicate billing"',
+            'reference_id' => 'INV-2026-0009',
+            'badge_type' => 'danger',
+            'logged_at' => '2026-07-05 10:00:00',
         ]);
     }
 }

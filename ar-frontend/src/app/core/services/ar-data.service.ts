@@ -1,4 +1,5 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import {
   Customer,
   Invoice,
@@ -23,8 +24,52 @@ import {
   providedIn: 'root'
 })
 export class ArDataService {
+  private readonly http = inject(HttpClient, { optional: true });
+  readonly apiUrl = 'http://localhost:8000/api';
+  readonly isBackendConnected = signal<boolean>(false);
+
   // Today reference (YYYY-MM-DD)
   readonly today = '2026-09-16';
+
+  constructor() {
+    this.loadFromBackend();
+  }
+
+  private get headers(): HttpHeaders {
+    return new HttpHeaders({
+      'X-User-Role': this.currentUser().role
+    });
+  }
+
+  loadFromBackend(): void {
+    if (!this.http) return;
+    this.http.get<{
+      today: string;
+      currentUser: AppUser;
+      bankAccounts: BankAccount[];
+      customers: Customer[];
+      invoices: Invoice[];
+      payments: Payment[];
+      dpTransactions: CustomerDpTransaction[];
+      activityLogs: ActivityLog[];
+    }>(`${this.apiUrl}/bootstrap`, { headers: this.headers }).subscribe({
+      next: (data) => {
+        if (data.currentUser) this.currentUser.set(data.currentUser);
+        if (data.bankAccounts) this.bankAccounts.set(data.bankAccounts);
+        if (data.customers) this.customers.set(data.customers);
+        if (data.invoices) this.invoices.set(data.invoices);
+        if (data.payments) this.payments.set(data.payments);
+        if (data.dpTransactions) this.dpTransactions.set(data.dpTransactions);
+        if (data.activityLogs) this.activityLogs.set(data.activityLogs);
+        this.isBackendConnected.set(true);
+      },
+      error: () => {
+        // Fallback to pre-loaded signals if backend server is offline
+        this.isBackendConnected.set(false);
+      }
+    });
+  }
+
 
   // Current logged in user & role (Interactive RBAC Switcher)
   readonly currentUser = signal<AppUser>({
@@ -1244,6 +1289,12 @@ export class ArDataService {
       description: `Active role switched to ${role}`,
       badgeType: 'info'
     });
+
+    if (this.http && this.isBackendConnected()) {
+      this.http.post(`${this.apiUrl}/auth/switch-role`, { role }, { headers: this.headers }).subscribe({
+        error: () => {}
+      });
+    }
   }
 
   // Derive status based on payments, dates, and current status (SRS Table 4.4.2)
@@ -1323,6 +1374,17 @@ export class ArDataService {
       badgeType: 'info'
     });
 
+    if (this.http && this.isBackendConnected()) {
+      this.http.post<{ customer: Customer }>(`${this.apiUrl}/customers`, payload, { headers: this.headers }).subscribe({
+        next: (res) => {
+          if (res?.customer) {
+            this.customers.update(list => list.map(c => (c.id === newCustomer.id ? res.customer : c)));
+          }
+        },
+        error: () => {}
+      });
+    }
+
     return newCustomer;
   }
 
@@ -1342,6 +1404,12 @@ export class ArDataService {
       referenceId: exists.code,
       badgeType: 'info'
     });
+
+    if (this.http && this.isBackendConnected()) {
+      this.http.put(`${this.apiUrl}/customers/${id}`, payload, { headers: this.headers }).subscribe({
+        error: () => {}
+      });
+    }
 
     return { success: true, message: `Data customer ${exists.name} berhasil diperbarui!` };
   }
@@ -1370,6 +1438,12 @@ export class ArDataService {
       referenceId: customer.code,
       badgeType: 'danger'
     });
+
+    if (this.http && this.isBackendConnected()) {
+      this.http.delete(`${this.apiUrl}/customers/${id}`, { headers: this.headers }).subscribe({
+        error: () => {}
+      });
+    }
 
     return { success: true, message: `Customer ${customer.name} berhasil dihapus.` };
   }
@@ -1476,6 +1550,17 @@ export class ArDataService {
       badgeType: newInvoice.status === 'Draft' ? 'secondary' : 'info'
     });
 
+    if (this.http && this.isBackendConnected()) {
+      this.http.post<{ invoice: Invoice }>(`${this.apiUrl}/invoices`, payload, { headers: this.headers }).subscribe({
+        next: (res) => {
+          if (res?.invoice) {
+            this.invoices.update(list => list.map(i => (i.id === newInvoice.id ? res.invoice : i)));
+          }
+        },
+        error: () => {}
+      });
+    }
+
     return newInvoice;
   }
 
@@ -1580,6 +1665,17 @@ export class ArDataService {
       badgeType: 'secondary'
     });
 
+    if (this.http && this.isBackendConnected()) {
+      this.http.put<{ invoice: Invoice }>(`${this.apiUrl}/invoices/${invoiceId}`, payload, { headers: this.headers }).subscribe({
+        next: (res) => {
+          if (res?.invoice) {
+            this.invoices.update(list => list.map(i => (i.id === invoiceId ? res.invoice : i)));
+          }
+        },
+        error: () => {}
+      });
+    }
+
     return { success: true, message: `Invoice Draft ${inv.invoiceNumber} berhasil diperbarui!`, invoice: updatedInvoice };
   }
 
@@ -1600,6 +1696,12 @@ export class ArDataService {
       referenceId: inv.invoiceNumber,
       badgeType: 'danger'
     });
+
+    if (this.http && this.isBackendConnected()) {
+      this.http.delete(`${this.apiUrl}/invoices/${invoiceId}`, { headers: this.headers }).subscribe({
+        error: () => {}
+      });
+    }
 
     return { success: true, message: `Invoice Draft ${inv.invoiceNumber} berhasil dihapus.` };
   }
@@ -1635,6 +1737,12 @@ export class ArDataService {
       referenceId: inv.invoiceNumber,
       badgeType: 'info'
     });
+
+    if (this.http && this.isBackendConnected()) {
+      this.http.post(`${this.apiUrl}/invoices/${invoiceId}/issue`, {}, { headers: this.headers }).subscribe({
+        error: () => {}
+      });
+    }
 
     return { success: true, message: `Invoice ${inv.invoiceNumber} berhasil diterbitkan dan siap ditagihkan.` };
   }
@@ -1682,6 +1790,12 @@ export class ArDataService {
       referenceId: inv.invoiceNumber,
       badgeType: 'danger'
     });
+
+    if (this.http && this.isBackendConnected()) {
+      this.http.post(`${this.apiUrl}/invoices/${invoiceId}/cancel`, { reason: reason.trim() }, { headers: this.headers }).subscribe({
+        error: () => {}
+      });
+    }
 
     return { success: true, message: `Invoice ${inv.invoiceNumber} berhasil dibatalkan.` };
   }
@@ -1813,6 +1927,17 @@ export class ArDataService {
       badgeType: 'success'
     });
 
+    if (this.http && this.isBackendConnected()) {
+      this.http.post<{ payment: Payment }>(`${this.apiUrl}/payments`, payload, { headers: this.headers }).subscribe({
+        next: (res) => {
+          if (res?.payment) {
+            this.payments.update(list => list.map(p => (p.id === payment.id ? res.payment : p)));
+          }
+        },
+        error: () => {}
+      });
+    }
+
     return payment;
   }
 
@@ -1855,6 +1980,12 @@ export class ArDataService {
       badgeType: 'danger'
     });
 
+    if (this.http && this.isBackendConnected()) {
+      this.http.delete(`${this.apiUrl}/payments/${paymentId}`, { headers: this.headers }).subscribe({
+        error: () => {}
+      });
+    }
+
     return { success: true, message: `Pembayaran ${payment.paymentNumber} berhasil di-rollback dan saldo tagihan invoice dipulihkan.` };
   }
 
@@ -1882,6 +2013,17 @@ export class ArDataService {
       badgeType: 'info'
     });
 
+    if (this.http && this.isBackendConnected()) {
+      this.http.post<{ bankAccount: BankAccount }>(`${this.apiUrl}/bank-accounts`, payload, { headers: this.headers }).subscribe({
+        next: (res) => {
+          if (res?.bankAccount) {
+            this.bankAccounts.update(list => list.map(b => (b.id === newAcc.id ? res.bankAccount : b)));
+          }
+        },
+        error: () => {}
+      });
+    }
+
     return { success: true, message: `Rekening ${newAcc.bankName} berhasil ditambahkan!`, bankAccount: newAcc };
   }
 
@@ -1892,6 +2034,12 @@ export class ArDataService {
     this.bankAccounts.update(list =>
       list.map(b => (b.id === id ? { ...b, ...payload } : b))
     );
+
+    if (this.http && this.isBackendConnected()) {
+      this.http.put(`${this.apiUrl}/bank-accounts/${id}`, payload, { headers: this.headers }).subscribe({
+        error: () => {}
+      });
+    }
 
     return { success: true, message: `Rekening ${exists.bankName} berhasil diperbarui.` };
   }
@@ -1914,6 +2062,12 @@ export class ArDataService {
       referenceId: exists.accountNumber,
       badgeType: 'danger'
     });
+
+    if (this.http && this.isBackendConnected()) {
+      this.http.delete(`${this.apiUrl}/bank-accounts/${id}`, { headers: this.headers }).subscribe({
+        error: () => {}
+      });
+    }
 
     return { success: true, message: `Rekening ${exists.bankName} berhasil dihapus.` };
   }
@@ -2032,6 +2186,12 @@ export class ArDataService {
       badgeType: 'success'
     });
 
+    if (this.http && this.isBackendConnected()) {
+      this.http.post(`${this.apiUrl}/payments/${paymentId}/verify-audit`, { auditorName, notes }, { headers: this.headers }).subscribe({
+        error: () => {}
+      });
+    }
+
     return { success: true, message: `Pembayaran ${pay.paymentNumber} berhasil diverifikasi oleh Income Audit FA!` };
   }
 
@@ -2110,6 +2270,20 @@ export class ArDataService {
       badgeType: 'success'
     });
 
+    if (this.http && this.isBackendConnected()) {
+      this.http.post<{ transaction: CustomerDpTransaction; payment: Payment }>(`${this.apiUrl}/dp-transactions/deposit`, payload, { headers: this.headers }).subscribe({
+        next: (res) => {
+          if (res?.transaction) {
+            this.dpTransactions.update(list => list.map(t => (t.id === transId ? res.transaction : t)));
+          }
+          if (res?.payment) {
+            this.payments.update(list => list.map(p => (p.id === newPayment.id ? res.payment : p)));
+          }
+        },
+        error: () => {}
+      });
+    }
+
     return { success: true, message: `Setoran Uang Muka Rp ${payload.amount.toLocaleString('id-ID')} berhasil dicatat!`, transaction: newTrans };
   }
 
@@ -2177,6 +2351,12 @@ export class ArDataService {
       referenceId: inv.invoiceNumber,
       badgeType: 'info'
     });
+
+    if (this.http && this.isBackendConnected()) {
+      this.http.post(`${this.apiUrl}/dp-transactions/apply`, payload, { headers: this.headers }).subscribe({
+        error: () => {}
+      });
+    }
 
     return { success: true, message: `Berhasil memotong Rp ${payload.amount.toLocaleString('id-ID')} dari saldo DP untuk invoice ${inv.invoiceNumber}.` };
   }
@@ -2371,11 +2551,16 @@ export class ArDataService {
       const asOfTime = new Date(this.today).getTime();
       const diffDays = Math.max(0, Math.floor((asOfTime - dueTime) / (1000 * 60 * 60 * 24)));
 
-      // Denda simulation for overdue invoice
+      // Denda calculation (uses penalty record if present, or default 50.000 on overdue invoice)
       const hasDenda = inv.status === 'Overdue' || (inv.timesOverdue && inv.timesOverdue > 0);
-      const nominalDenda = hasDenda ? 50000 : 0;
+      const pen = inv.penalty;
+      const nominalDenda = pen ? pen.penaltyAmount : (hasDenda ? 50000 : 0);
+      const paidDenda = pen ? pen.paidAmount : 0;
+      const waivedDenda = pen ? pen.waivedAmount : 0;
+      const saldoDenda = pen ? pen.balanceDue : Math.max(0, nominalDenda - paidDenda - waivedDenda);
 
       rows.push({
+        invoiceId: inv.id,
         // Penagihan Piutang (Debet)
         tglTerbit: inv.issueDate,
         noInvoice: inv.invoiceNumber,
@@ -2395,19 +2580,163 @@ export class ArDataService {
 
         // Denda (Penalti & Penghapusan)
         nominalDenda: nominalDenda,
-        tglBayarDenda: '-',
-        noBuktiJurnalDenda: '-',
-        keteranganDenda: '-',
-        nominalBayarDenda: 0,
-        tglHapusDenda: '-',
-        memoHapusDenda: '-',
-        keteranganHapusDenda: '-',
-        nominalHapusDenda: 0,
-        saldoDenda: nominalDenda
+        tglBayarDenda: pen?.paidDate || '-',
+        noBuktiJurnalDenda: pen?.paymentJournalNumber || '-',
+        keteranganDenda: pen?.paymentNotes || '-',
+        nominalBayarDenda: paidDenda,
+        tglHapusDenda: pen?.waivedDate || '-',
+        memoHapusDenda: pen?.waiverMemoNumber || '-',
+        keteranganHapusDenda: pen?.waiverNotes || '-',
+        nominalHapusDenda: waivedDenda,
+        saldoDenda: saldoDenda
       });
     }
 
     return rows;
+  }
+
+  payInvoicePenalty(payload: {
+    invoiceId: string;
+    paidAmount: number;
+    paidDate?: string;
+    paymentJournalNumber?: string;
+    paymentNotes?: string;
+  }): { success: boolean; message: string } {
+    const inv = this.invoices().find(i => i.id === payload.invoiceId);
+    if (!inv) return { success: false, message: 'Invoice tidak ditemukan.' };
+    if (payload.paidAmount <= 0) return { success: false, message: 'Nominal pembayaran denda harus lebih dari 0.' };
+
+    const paidDate = payload.paidDate || this.today;
+    const journalNumber = payload.paymentJournalNumber || `BD${paidDate.replace(/-/g, '').substring(2)}${Math.floor(100 + Math.random() * 900)}`;
+    const notes = payload.paymentNotes || `Pelunasan denda faktur ${inv.invoiceNumber}`;
+
+    this.invoices.update(list =>
+      list.map(i => {
+        if (i.id === payload.invoiceId) {
+          const prev = i.penalty;
+          const basePenalty = prev ? prev.penaltyAmount : 50000;
+          const prevPaid = prev ? prev.paidAmount : 0;
+          const prevWaived = prev ? prev.waivedAmount : 0;
+          const newPaid = Math.min(basePenalty - prevWaived, prevPaid + payload.paidAmount);
+          const newBalance = Math.max(0, basePenalty - newPaid - prevWaived);
+
+          return {
+            ...i,
+            penalty: {
+              penaltyAmount: basePenalty,
+              paidDate,
+              paymentJournalNumber: journalNumber,
+              paymentNotes: notes,
+              paidAmount: newPaid,
+              waivedDate: prev?.waivedDate || null,
+              waiverMemoNumber: prev?.waiverMemoNumber || null,
+              waiverNotes: prev?.waiverNotes || null,
+              waivedAmount: prevWaived,
+              balanceDue: newBalance
+            }
+          };
+        }
+        return i;
+      })
+    );
+
+    this.addActivityLog({
+      type: 'payment_recorded',
+      description: `Pembayaran Denda sebesar Rp ${payload.paidAmount.toLocaleString('id-ID')} dicatat untuk invoice ${inv.invoiceNumber} (Jurnal: ${journalNumber})`,
+      amount: payload.paidAmount,
+      referenceId: inv.invoiceNumber,
+      badgeType: 'success'
+    });
+
+    if (this.http && this.isBackendConnected()) {
+      this.http.post<{ invoice: Invoice }>(`${this.apiUrl}/invoices/${payload.invoiceId}/penalty/pay`, {
+        paidAmount: payload.paidAmount,
+        paidDate,
+        paymentJournalNumber: journalNumber,
+        paymentNotes: notes
+      }, { headers: this.headers }).subscribe({
+        next: (res) => {
+          if (res?.invoice) {
+            this.invoices.update(list => list.map(i => (i.id === payload.invoiceId ? res.invoice : i)));
+          }
+        },
+        error: () => {}
+      });
+    }
+
+    return { success: true, message: `Pembayaran denda Rp ${payload.paidAmount.toLocaleString('id-ID')} berhasil dicatat!` };
+  }
+
+  waiveInvoicePenalty(payload: {
+    invoiceId: string;
+    waivedAmount: number;
+    waivedDate?: string;
+    waiverMemoNumber?: string;
+    waiverNotes?: string;
+  }): { success: boolean; message: string } {
+    const inv = this.invoices().find(i => i.id === payload.invoiceId);
+    if (!inv) return { success: false, message: 'Invoice tidak ditemukan.' };
+    if (payload.waivedAmount <= 0) return { success: false, message: 'Nominal penghapusan denda harus lebih dari 0.' };
+
+    const waivedDate = payload.waivedDate || this.today;
+    const memoNumber = payload.waiverMemoNumber || `MEMO/FNC/${waivedDate.replace(/-/g, '').substring(2)}/${Math.floor(10 + Math.random() * 89)}`;
+    const notes = payload.waiverNotes || `Penghapusan denda faktur ${inv.invoiceNumber}`;
+
+    this.invoices.update(list =>
+      list.map(i => {
+        if (i.id === payload.invoiceId) {
+          const prev = i.penalty;
+          const basePenalty = prev ? prev.penaltyAmount : 50000;
+          const prevPaid = prev ? prev.paidAmount : 0;
+          const prevWaived = prev ? prev.waivedAmount : 0;
+          const newWaived = Math.min(basePenalty - prevPaid, prevWaived + payload.waivedAmount);
+          const newBalance = Math.max(0, basePenalty - prevPaid - newWaived);
+
+          return {
+            ...i,
+            penalty: {
+              penaltyAmount: basePenalty,
+              paidDate: prev?.paidDate || null,
+              paymentJournalNumber: prev?.paymentJournalNumber || null,
+              paymentNotes: prev?.paymentNotes || null,
+              paidAmount: prevPaid,
+              waivedDate,
+              waiverMemoNumber: memoNumber,
+              waiverNotes: notes,
+              waivedAmount: newWaived,
+              balanceDue: newBalance
+            }
+          };
+        }
+        return i;
+      })
+    );
+
+    this.addActivityLog({
+      type: 'status_changed',
+      description: `Penghapusan Denda sebesar Rp ${payload.waivedAmount.toLocaleString('id-ID')} disetujui untuk invoice ${inv.invoiceNumber} (Memo: ${memoNumber})`,
+      amount: payload.waivedAmount,
+      referenceId: inv.invoiceNumber,
+      badgeType: 'warning'
+    });
+
+    if (this.http && this.isBackendConnected()) {
+      this.http.post<{ invoice: Invoice }>(`${this.apiUrl}/invoices/${payload.invoiceId}/penalty/waive`, {
+        waivedAmount: payload.waivedAmount,
+        waivedDate,
+        waiverMemoNumber: memoNumber,
+        waiverNotes: notes
+      }, { headers: this.headers }).subscribe({
+        next: (res) => {
+          if (res?.invoice) {
+            this.invoices.update(list => list.map(i => (i.id === payload.invoiceId ? res.invoice : i)));
+          }
+        },
+        error: () => {}
+      });
+    }
+
+    return { success: true, message: `Penghapusan denda Rp ${payload.waivedAmount.toLocaleString('id-ID')} berhasil diterapkan!` };
   }
 
   // ==========================================
@@ -2433,6 +2762,12 @@ export class ArDataService {
         type: 'status_changed',
         description: `Scheduled Overdue Detection: ${overdueFound} invoice diperbarui statusnya menjadi Overdue`,
         badgeType: 'warning'
+      });
+    }
+
+    if (this.http && this.isBackendConnected()) {
+      this.http.post(`${this.apiUrl}/invoices/detect-overdue`, { asOfDate: this.today }, { headers: this.headers }).subscribe({
+        error: () => {}
       });
     }
 

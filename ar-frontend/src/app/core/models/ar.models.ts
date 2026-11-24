@@ -79,7 +79,21 @@ export interface MutasiTransactionDetail {
   type: 'invoice' | 'payment';
 }
 
+export interface InvoicePenaltyInfo {
+  penaltyAmount: number;
+  paidDate?: string | null;
+  paymentJournalNumber?: string | null;
+  paymentNotes?: string | null;
+  paidAmount: number;
+  waivedDate?: string | null;
+  waiverMemoNumber?: string | null;
+  waiverNotes?: string | null;
+  waivedAmount: number;
+  balanceDue: number;
+}
+
 export interface KartuPiutangRow {
+  invoiceId?: string;
   // Penagihan Piutang (Debet)
   tglTerbit?: string;
   noInvoice?: string;
@@ -179,6 +193,7 @@ export interface Invoice {
   hasRollover?: boolean;                // Apakah tagihan ini mencakup akumulasi tunggakan sebelumnya
   rolledOverAmount?: number;            // Nominal tunggakan yang digulung
   rolledOverFrom?: string;              // Nomor invoice asal tunggakan
+  penalty?: InvoicePenaltyInfo | null;  // Rincian Denda & Penghapusan Denda
 }
 
 export interface PaymentAllocation {
