@@ -1,4 +1,5 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import {
   Customer,
   Invoice,
@@ -23,8 +24,52 @@ import {
   providedIn: 'root'
 })
 export class ArDataService {
+  private readonly http = inject(HttpClient, { optional: true });
+  readonly apiUrl = 'http://localhost:8000/api';
+  readonly isBackendConnected = signal<boolean>(false);
+
   // Today reference (YYYY-MM-DD)
   readonly today = '2026-09-16';
+
+  constructor() {
+    this.loadFromBackend();
+  }
+
+  private get headers(): HttpHeaders {
+    return new HttpHeaders({
+      'X-User-Role': this.currentUser().role
+    });
+  }
+
+  loadFromBackend(): void {
+    if (!this.http) return;
+    this.http.get<{
+      today: string;
+      currentUser: AppUser;
+      bankAccounts: BankAccount[];
+      customers: Customer[];
+      invoices: Invoice[];
+      payments: Payment[];
+      dpTransactions: CustomerDpTransaction[];
+      activityLogs: ActivityLog[];
+    }>(`${this.apiUrl}/bootstrap`, { headers: this.headers }).subscribe({
+      next: (data) => {
+        if (data.currentUser) this.currentUser.set(data.currentUser);
+        if (data.bankAccounts) this.bankAccounts.set(data.bankAccounts);
+        if (data.customers) this.customers.set(data.customers);
+        if (data.invoices) this.invoices.set(data.invoices);
+        if (data.payments) this.payments.set(data.payments);
+        if (data.dpTransactions) this.dpTransactions.set(data.dpTransactions);
+        if (data.activityLogs) this.activityLogs.set(data.activityLogs);
+        this.isBackendConnected.set(true);
+      },
+      error: () => {
+        // Fallback to pre-loaded signals if backend server is offline
+        this.isBackendConnected.set(false);
+      }
+    });
+  }
+
 
   // Current logged in user & role (Interactive RBAC Switcher)
   readonly currentUser = signal<AppUser>({
@@ -1244,6 +1289,12 @@ export class ArDataService {
       description: `Active role switched to ${role}`,
       badgeType: 'info'
     });
+
+    if (this.http && this.isBackendConnected()) {
+      this.http.post(`${this.apiUrl}/auth/switch-role`, { role }, { headers: this.headers }).subscribe({
+        error: () => {}
+      });
+    }
   }
 
   // Derive status based on payments, dates, and current status (SRS Table 4.4.2)
@@ -1323,6 +1374,17 @@ export class ArDataService {
       badgeType: 'info'
     });
 
+    if (this.http && this.isBackendConnected()) {
+      this.http.post<{ customer: Customer }>(`${this.apiUrl}/customers`, payload, { headers: this.headers }).subscribe({
+        next: (res) => {
+          if (res?.customer) {
+            this.customers.update(list => list.map(c => (c.id === newCustomer.id ? res.customer : c)));
+          }
+        },
+        error: () => {}
+      });
+    }
+
     return newCustomer;
   }
 
@@ -1342,6 +1404,12 @@ export class ArDataService {
       referenceId: exists.code,
       badgeType: 'info'
     });
+
+    if (this.http && this.isBackendConnected()) {
+      this.http.put(`${this.apiUrl}/customers/${id}`, payload, { headers: this.headers }).subscribe({
+        error: () => {}
+      });
+    }
 
     return { success: true, message: `Data customer ${exists.name} berhasil diperbarui!` };
   }
@@ -1370,6 +1438,12 @@ export class ArDataService {
       referenceId: customer.code,
       badgeType: 'danger'
     });
+
+    if (this.http && this.isBackendConnected()) {
+      this.http.delete(`${this.apiUrl}/customers/${id}`, { headers: this.headers }).subscribe({
+        error: () => {}
+      });
+    }
 
     return { success: true, message: `Customer ${customer.name} berhasil dihapus.` };
   }
@@ -1476,6 +1550,17 @@ export class ArDataService {
       badgeType: newInvoice.status === 'Draft' ? 'secondary' : 'info'
     });
 
+    if (this.http && this.isBackendConnected()) {
+      this.http.post<{ invoice: Invoice }>(`${this.apiUrl}/invoices`, payload, { headers: this.headers }).subscribe({
+        next: (res) => {
+          if (res?.invoice) {
+            this.invoices.update(list => list.map(i => (i.id === newInvoice.id ? res.invoice : i)));
+          }
+        },
+        error: () => {}
+      });
+    }
+
     return newInvoice;
   }
 
@@ -1580,6 +1665,17 @@ export class ArDataService {
       badgeType: 'secondary'
     });
 
+    if (this.http && this.isBackendConnected()) {
+      this.http.put<{ invoice: Invoice }>(`${this.apiUrl}/invoices/${invoiceId}`, payload, { headers: this.headers }).subscribe({
+        next: (res) => {
+          if (res?.invoice) {
+            this.invoices.update(list => list.map(i => (i.id === invoiceId ? res.invoice : i)));
+          }
+        },
+        error: () => {}
+      });
+    }
+
     return { success: true, message: `Invoice Draft ${inv.invoiceNumber} berhasil diperbarui!`, invoice: updatedInvoice };
   }
 
@@ -1600,6 +1696,12 @@ export class ArDataService {
       referenceId: inv.invoiceNumber,
       badgeType: 'danger'
     });
+
+    if (this.http && this.isBackendConnected()) {
+      this.http.delete(`${this.apiUrl}/invoices/${invoiceId}`, { headers: this.headers }).subscribe({
+        error: () => {}
+      });
+    }
 
     return { success: true, message: `Invoice Draft ${inv.invoiceNumber} berhasil dihapus.` };
   }
@@ -1635,6 +1737,12 @@ export class ArDataService {
       referenceId: inv.invoiceNumber,
       badgeType: 'info'
     });
+
+    if (this.http && this.isBackendConnected()) {
+      this.http.post(`${this.apiUrl}/invoices/${invoiceId}/issue`, {}, { headers: this.headers }).subscribe({
+        error: () => {}
+      });
+    }
 
     return { success: true, message: `Invoice ${inv.invoiceNumber} berhasil diterbitkan dan siap ditagihkan.` };
   }
@@ -1682,6 +1790,12 @@ export class ArDataService {
       referenceId: inv.invoiceNumber,
       badgeType: 'danger'
     });
+
+    if (this.http && this.isBackendConnected()) {
+      this.http.post(`${this.apiUrl}/invoices/${invoiceId}/cancel`, { reason: reason.trim() }, { headers: this.headers }).subscribe({
+        error: () => {}
+      });
+    }
 
     return { success: true, message: `Invoice ${inv.invoiceNumber} berhasil dibatalkan.` };
   }
@@ -1813,6 +1927,17 @@ export class ArDataService {
       badgeType: 'success'
     });
 
+    if (this.http && this.isBackendConnected()) {
+      this.http.post<{ payment: Payment }>(`${this.apiUrl}/payments`, payload, { headers: this.headers }).subscribe({
+        next: (res) => {
+          if (res?.payment) {
+            this.payments.update(list => list.map(p => (p.id === payment.id ? res.payment : p)));
+          }
+        },
+        error: () => {}
+      });
+    }
+
     return payment;
   }
 
@@ -1855,6 +1980,12 @@ export class ArDataService {
       badgeType: 'danger'
     });
 
+    if (this.http && this.isBackendConnected()) {
+      this.http.delete(`${this.apiUrl}/payments/${paymentId}`, { headers: this.headers }).subscribe({
+        error: () => {}
+      });
+    }
+
     return { success: true, message: `Pembayaran ${payment.paymentNumber} berhasil di-rollback dan saldo tagihan invoice dipulihkan.` };
   }
 
@@ -1882,6 +2013,17 @@ export class ArDataService {
       badgeType: 'info'
     });
 
+    if (this.http && this.isBackendConnected()) {
+      this.http.post<{ bankAccount: BankAccount }>(`${this.apiUrl}/bank-accounts`, payload, { headers: this.headers }).subscribe({
+        next: (res) => {
+          if (res?.bankAccount) {
+            this.bankAccounts.update(list => list.map(b => (b.id === newAcc.id ? res.bankAccount : b)));
+          }
+        },
+        error: () => {}
+      });
+    }
+
     return { success: true, message: `Rekening ${newAcc.bankName} berhasil ditambahkan!`, bankAccount: newAcc };
   }
 
@@ -1892,6 +2034,12 @@ export class ArDataService {
     this.bankAccounts.update(list =>
       list.map(b => (b.id === id ? { ...b, ...payload } : b))
     );
+
+    if (this.http && this.isBackendConnected()) {
+      this.http.put(`${this.apiUrl}/bank-accounts/${id}`, payload, { headers: this.headers }).subscribe({
+        error: () => {}
+      });
+    }
 
     return { success: true, message: `Rekening ${exists.bankName} berhasil diperbarui.` };
   }
@@ -1914,6 +2062,12 @@ export class ArDataService {
       referenceId: exists.accountNumber,
       badgeType: 'danger'
     });
+
+    if (this.http && this.isBackendConnected()) {
+      this.http.delete(`${this.apiUrl}/bank-accounts/${id}`, { headers: this.headers }).subscribe({
+        error: () => {}
+      });
+    }
 
     return { success: true, message: `Rekening ${exists.bankName} berhasil dihapus.` };
   }
@@ -2032,6 +2186,12 @@ export class ArDataService {
       badgeType: 'success'
     });
 
+    if (this.http && this.isBackendConnected()) {
+      this.http.post(`${this.apiUrl}/payments/${paymentId}/verify-audit`, { auditorName, notes }, { headers: this.headers }).subscribe({
+        error: () => {}
+      });
+    }
+
     return { success: true, message: `Pembayaran ${pay.paymentNumber} berhasil diverifikasi oleh Income Audit FA!` };
   }
 
@@ -2110,6 +2270,20 @@ export class ArDataService {
       badgeType: 'success'
     });
 
+    if (this.http && this.isBackendConnected()) {
+      this.http.post<{ transaction: CustomerDpTransaction; payment: Payment }>(`${this.apiUrl}/dp-transactions/deposit`, payload, { headers: this.headers }).subscribe({
+        next: (res) => {
+          if (res?.transaction) {
+            this.dpTransactions.update(list => list.map(t => (t.id === transId ? res.transaction : t)));
+          }
+          if (res?.payment) {
+            this.payments.update(list => list.map(p => (p.id === newPayment.id ? res.payment : p)));
+          }
+        },
+        error: () => {}
+      });
+    }
+
     return { success: true, message: `Setoran Uang Muka Rp ${payload.amount.toLocaleString('id-ID')} berhasil dicatat!`, transaction: newTrans };
   }
 
@@ -2177,6 +2351,12 @@ export class ArDataService {
       referenceId: inv.invoiceNumber,
       badgeType: 'info'
     });
+
+    if (this.http && this.isBackendConnected()) {
+      this.http.post(`${this.apiUrl}/dp-transactions/apply`, payload, { headers: this.headers }).subscribe({
+        error: () => {}
+      });
+    }
 
     return { success: true, message: `Berhasil memotong Rp ${payload.amount.toLocaleString('id-ID')} dari saldo DP untuk invoice ${inv.invoiceNumber}.` };
   }
@@ -2433,6 +2613,12 @@ export class ArDataService {
         type: 'status_changed',
         description: `Scheduled Overdue Detection: ${overdueFound} invoice diperbarui statusnya menjadi Overdue`,
         badgeType: 'warning'
+      });
+    }
+
+    if (this.http && this.isBackendConnected()) {
+      this.http.post(`${this.apiUrl}/invoices/detect-overdue`, { asOfDate: this.today }, { headers: this.headers }).subscribe({
+        error: () => {}
       });
     }
 
